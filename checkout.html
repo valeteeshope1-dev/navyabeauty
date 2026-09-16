@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#7b1fa2">
+<meta name="robots" content="noindex">
+<title>Finalizar pedido – Navya Beauty Cosmetics</title>
+<style>
+/* ============================================================
+   NAVYA — Checkout
+   Mobile first. Sem CDN, sem fontes externas.
+   ============================================================ */
+
+:root{
+  --bg:#fdf8fc;
+  --ink:#1b1220;
+  --muted:#71657c;
+  --purple:#7b1fa2;
+  --pink:#d94fb0;
+  --pink-soft:#f9e9f5;
+  --lilac:#f4eaf7;
+  --green:#1d8b57;
+  --erro:#c62828;
+  --border:#ecdcea;
+  --shadow:0 14px 40px rgba(70,20,80,.10);
+  --radius:18px;
+  --max:1080px;
+  --bar:calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:rgba(123,31,162,.12)}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color:var(--ink);background:var(--bg);
+  line-height:1.55;font-size:16px;overflow-x:hidden;
+  padding-bottom:var(--bar)
+}
+img{max-width:100%;display:block}
+a{text-decoration:none;color:inherit}
+button{font:inherit;color:inherit}
+h1,h2,h3{margin:0}
+.wrap{width:100%;padding:0 18px;margin:0 auto;max-width:var(--max)}
+
+/* --- Topo ----------------------------------------------------- */
+.brandbar{
+  background:#fff;border-bottom:1px solid var(--border);
+  padding:14px 18px;display:flex;align-items:center;justify-content:center;
+  position:relative
+}
+.brandbar img{height:42px;width:auto}
+.voltar{
+  position:absolute;left:18px;top:50%;transform:translateY(-50%);
+  font-size:13px;font-weight:800;color:var(--muted);
+  display:flex;align-items:center;gap:5px;min-height:44px;padding-right:10px
+}
+.seguro{
+  background:var(--ink);color:#fff;text-align:center;
+  padding:9px 16px;font-size:12px;font-weight:800
+}
+.seguro b{color:var(--pink)}
+
+/* --- Passos --------------------------------------------------- */
+.passos{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:16px 0 4px;font-size:11.5px;font-weight:800;color:var(--muted)
+}
+.passo{display:flex;align-items:center;gap:6px}
+.passo i{
+  width:22px;height:22px;border-radius:50%;font-style:normal;
+  background:var(--lilac);color:var(--purple);
+  display:flex;align-items:center;justify-content:center;font-size:11px
+}
+.passo.feito i{background:var(--green);color:#fff}
+.passo.ativo{color:var(--purple)}
+.passo.ativo i{background:linear-gradient(120deg,var(--purple),var(--pink));color:#fff}
+.passos .tra{width:16px;height:2px;background:var(--border);border-radius:2px}
+
+/* --- Resumo do pedido ----------------------------------------- */
+.resumo{
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+  margin-top:14px;overflow:hidden
+}
+.resumo-topo{
+  display:flex;align-items:center;gap:12px;width:100%;
+  padding:15px 16px;border:0;background:#fff;cursor:pointer;text-align:left;
+  appearance:none;-webkit-appearance:none
+}
+.resumo-topo img{width:46px;height:46px;flex:0 0 46px;border-radius:10px;object-fit:cover;border:1px solid var(--border)}
+.resumo-topo .rt-info{flex:1;min-width:0;line-height:1.3}
+.resumo-topo b{display:block;font-size:13.5px}
+.resumo-topo small{font-size:12px;color:var(--muted);font-weight:700}
+.resumo-topo .rt-total{font-size:17px;font-weight:900;white-space:nowrap}
+.resumo-topo .rt-seta{color:var(--purple);font-size:13px;transition:transform .2s ease}
+.resumo.aberto .rt-seta{transform:rotate(180deg)}
+.resumo-corpo{display:none;padding:0 16px 16px;border-top:1px solid var(--border)}
+.resumo.aberto .resumo-corpo{display:block}
+
+.ci{display:flex;gap:11px;align-items:center;padding:13px 0;border-bottom:1px solid var(--border)}
+.ci:last-of-type{border-bottom:0}
+.ci-bola{width:15px;height:15px;flex:0 0 15px;border-radius:50%;border:1px solid #d5c6d3}
+.ci-info{flex:1;min-width:0;line-height:1.3}
+.ci-info b{display:block;font-size:13px}
+.ci-info small{font-size:12px;color:var(--muted);font-weight:700}
+.ci-val{font-size:14px;font-weight:900;white-space:nowrap}
+
+.linha{display:flex;justify-content:space-between;font-size:13.5px;margin-top:9px;color:var(--muted);font-weight:700}
+.linha.eco{color:var(--green);font-weight:800}
+.linha.total{
+  font-size:18px;color:var(--ink);font-weight:900;
+  margin-top:11px;padding-top:11px;border-top:1px solid var(--border)
+}
+.parcela-txt{font-size:12.5px;color:var(--green);font-weight:800;text-align:right;margin-top:3px}
+
+/* --- Formulario ----------------------------------------------- */
+.bloco{
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px;margin-top:14px
+}
+.bloco h2{
+  font-size:16px;letter-spacing:-.02em;margin-bottom:14px;
+  display:flex;align-items:center;gap:9px
+}
+.bloco h2 i{
+  width:24px;height:24px;border-radius:50%;font-style:normal;font-size:12px;
+  background:linear-gradient(120deg,var(--purple),var(--pink));color:#fff;
+  display:flex;align-items:center;justify-content:center;flex:0 0 24px
+}
+
+.campos{display:grid;grid-template-columns:1fr;gap:12px}
+.campo{display:flex;flex-direction:column}
+.campo label{font-size:12px;font-weight:800;margin-bottom:5px;color:var(--muted)}
+.campo input,.campo select{
+  height:52px;padding:0 14px;font:inherit;font-size:15px;
+  border:1.5px solid var(--border);border-radius:12px;background:#fff;
+  color:var(--ink);width:100%;appearance:none;-webkit-appearance:none
+}
+.campo select{
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%237b1fa2' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:38px
+}
+.campo input:focus,.campo select:focus{outline:0;border-color:var(--purple)}
+.campo input::placeholder{color:#b5abbc}
+.campo.ruim input,.campo.ruim select{border-color:var(--erro);background:#fff6f6}
+.campo .aviso{font-size:11.5px;color:var(--erro);font-weight:800;margin-top:4px;display:none}
+.campo.ruim .aviso{display:block}
+.campo .dica{font-size:11.5px;color:var(--muted);font-weight:700;margin-top:4px}
+
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tripla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* --- Pagamento ------------------------------------------------ */
+.pag{display:grid;gap:10px}
+.pag-op{
+  display:flex;align-items:center;gap:12px;width:100%;
+  min-height:62px;padding:12px 15px;text-align:left;
+  border:1.5px solid var(--border);background:#fff;border-radius:13px;cursor:pointer;
+  appearance:none;-webkit-appearance:none;font-family:inherit
+}
+.pag-op .radio{
+  width:20px;height:20px;flex:0 0 20px;border-radius:50%;
+  border:2px solid var(--border);position:relative
+}
+.pag-op.ativo{border:2px solid var(--purple);background:#faf2fc}
+.pag-op.ativo .radio{border-color:var(--purple)}
+.pag-op.ativo .radio:after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--purple)}
+.pag-op .icone{
+  width:26px;height:26px;flex:0 0 26px;
+  display:flex;align-items:center;justify-content:center
+}
+.pag-op .icone svg{width:100%;height:100%;display:block}
+.pag-op .txt{flex:1;min-width:0;line-height:1.3}
+.pag-op .txt b{display:block;font-size:14.5px}
+.pag-op .txt small{font-size:12px;color:var(--muted);font-weight:700}
+.pag-op .tag{
+  font-size:10.5px;font-weight:900;color:#fff;background:var(--green);
+  padding:3px 8px;border-radius:99px;white-space:nowrap
+}
+
+.pag-aviso{
+  margin-top:14px;padding:12px 14px;border-radius:12px;
+  background:var(--lilac);color:#7a4e8c;font-size:12.5px;font-weight:700;line-height:1.5
+}
+.pag-aviso b{color:var(--purple)}
+
+/* --- Botao / barra fixa --------------------------------------- */
+.cta{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;min-height:58px;padding:16px 18px;
+  border:0;border-radius:14px;cursor:pointer;
+  background:linear-gradient(120deg,var(--purple),var(--pink));
+  color:#fff;font-weight:900;font-size:16px;line-height:1.2;
+  box-shadow:0 10px 22px rgba(123,31,162,.25);
+  appearance:none;-webkit-appearance:none;transition:transform .15s ease
+}
+.cta:active{transform:scale(.985)}
+.cta:disabled{opacity:.55;cursor:default;box-shadow:none}
+.micro{
+  display:flex;justify-content:center;gap:12px;flex-wrap:wrap;
+  margin-top:14px;color:#73687d;font-size:12px;font-weight:700
+}
+.barra{
+  display:flex;position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,.96);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-top:1px solid var(--border);
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  gap:12px;align-items:center;box-shadow:0 -6px 24px rgba(70,20,80,.09)
+}
+.barra-preco{min-width:96px;line-height:1.15}
+.barra-preco b{display:block;font-size:19px;font-weight:900;letter-spacing:-.02em}
+.barra-preco span{font-size:11px;color:var(--muted);font-weight:700}
+.barra .cta{min-height:50px;padding:13px 12px;font-size:14px;white-space:nowrap}
+
+/* --- Sacola vazia --------------------------------------------- */
+.vazio{text-align:center;padding:60px 20px}
+.sacola-vazia{
+  width:86px;height:86px;margin:0 auto 16px;border-radius:50%;
+  background:var(--lilac);color:var(--purple);
+  display:flex;align-items:center;justify-content:center
+}
+.sacola-vazia svg{width:42px;height:42px;display:block}
+.vazio b{display:block;font-size:19px;margin-bottom:6px}
+.vazio p{color:var(--muted);font-size:14.5px;margin:0 0 22px}
+.vazio .cta{max-width:320px;margin:0 auto}
+
+/* --- Pedido registrado ---------------------------------------- */
+.feito{
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+  padding:28px 20px;text-align:center;margin-top:14px
+}
+.feito .emoji{font-size:52px;line-height:1;margin-bottom:12px}
+.feito h2{font-size:22px;margin-bottom:8px}
+.feito p{color:var(--muted);font-size:14.5px;margin:0 0 18px}
+.feito .num{
+  display:inline-block;background:var(--lilac);color:var(--purple);
+  padding:8px 16px;border-radius:99px;font-weight:900;font-size:14px;margin-bottom:18px
+}
+.feito .resumo{margin-top:0;text-align:left}
+
+/* --- Rodape --------------------------------------------------- */
+footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-top:28px}
+.footer-inner{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.footer-inner img{height:38px;width:auto}
+
+/* ============================================================
+   TABLET / DESKTOP
+   ============================================================ */
+@media (min-width:700px){
+  .wrap{padding:0 28px}
+  .campos{grid-template-columns:1fr 1fr}
+  .campo.largo{grid-column:1 / -1}
+  .tripla{grid-template-columns:1fr 1fr 1fr}
+  .footer-inner{flex-direction:row;justify-content:space-between;text-align:left}
+}
+
+@media (min-width:1000px){
+  body{padding-bottom:0}
+  .barra{display:none}
+  .colunas{
+    display:grid;grid-template-columns:1.25fr .75fr;
+    gap:28px;align-items:start;padding-bottom:50px
+  }
+  .lado{position:sticky;top:20px}
+  .resumo{margin-top:0}
+  .resumo-corpo{display:block}      /* no desktop fica sempre aberto */
+  .resumo-topo{cursor:default}
+  .resumo-topo .rt-seta{display:none}
+  .passos{padding:22px 0 6px;font-size:12.5px}
+}
+</style>
+</head>
+<body>
+
+<div class="seguro">🔒 Ambiente seguro · <b>Frete grátis</b> para todo o Brasil</div>
+
+<div class="brandbar">
+  <a href="/produto" class="voltar">← Voltar</a>
+  <img src="./img/logo-navya.png" alt="Navya Beauty Cosmetics" width="640" height="186">
+</div>
+
+<div class="wrap">
+  <div class="passos">
+    <span class="passo feito"><i>✓</i>Sacola</span>
+    <span class="tra"></span>
+    <span class="passo ativo" id="passo2"><i>2</i>Dados</span>
+    <span class="tra"></span>
+    <span class="passo" id="passo3"><i>3</i>Pagamento</span>
+  </div>
+</div>
+
+<!-- sacola vazia -->
+<div class="wrap" id="telaVazia" hidden>
+  <div class="vazio">
+    <div class="sacola-vazia">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4.2 8h15.6l-1.25 11.6a2.2 2.2 0 0 1-2.19 1.9H7.64a2.2 2.2 0 0 1-2.19-1.9z"/>
+        <path d="M8.6 8V6.4a3.4 3.4 0 0 1 6.8 0V8"/>
+      </svg>
+    </div>
+    <b>Sua sacola está vazia</b>
+    <p>Escolha a cor e a quantidade para continuar.</p>
+    <a href="/produto" class="cta">VER O PRODUTO →</a>
+  </div>
+</div>
+
+<!-- pedido registrado -->
+<div class="wrap" id="telaFeito" hidden>
+  <div class="feito">
+    <div class="emoji">✅</div>
+    <h2>Pedido registrado!</h2>
+    <span class="num" id="feitoNumero">#000000</span>
+    <p id="feitoTexto">Anote o número do seu pedido.</p>
+    <div class="resumo aberto" id="feitoResumo"></div>
+    <a href="/produto" class="cta" style="margin-top:18px">VOLTAR À LOJA</a>
+  </div>
+</div>
+
+<!-- checkout -->
+<main class="wrap colunas" id="telaCheckout" hidden>
+
+  <form id="form" novalidate>
+
+    <div class="bloco">
+      <h2><i>1</i>Seus dados</h2>
+      <div class="campos">
+        <div class="campo largo" id="c-nome">
+          <label for="nome">Nome completo</label>
+          <input id="nome" name="nome" type="text" autocomplete="name" placeholder="Maria da Silva">
+          <span class="aviso">Informe seu nome e sobrenome.</span>
+        </div>
+        <div class="campo largo" id="c-email">
+          <label for="email">E-mail</label>
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="maria@email.com">
+          <span class="aviso">E-mail inválido.</span>
+          <span class="dica">É por aqui que enviamos o código de rastreio.</span>
+        </div>
+        <div class="campo" id="c-cpf">
+          <label for="cpf">CPF</label>
+          <input id="cpf" name="cpf" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00">
+          <span class="aviso">CPF inválido.</span>
+        </div>
+        <div class="campo" id="c-tel">
+          <label for="tel">Celular</label>
+          <input id="tel" name="tel" type="tel" autocomplete="tel" inputmode="numeric" maxlength="15" placeholder="(11) 90000-0000">
+          <span class="aviso">Informe um celular com DDD.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2><i>2</i>Endereço de entrega</h2>
+      <div class="campos">
+        <div class="campo" id="c-cep">
+          <label for="cep">CEP</label>
+          <input id="cep" name="cep" type="text" inputmode="numeric" maxlength="9" autocomplete="postal-code" placeholder="00000-000">
+          <span class="aviso">CEP inválido.</span>
+          <span class="dica" id="cepDica">Preenchemos o resto para você.</span>
+        </div>
+        <div class="campo" id="c-numero">
+          <label for="numero">Número</label>
+          <input id="numero" name="numero" type="text" inputmode="numeric" placeholder="123">
+          <span class="aviso">Informe o número.</span>
+        </div>
+        <div class="campo largo" id="c-rua">
+          <label for="rua">Rua</label>
+          <input id="rua" name="rua" type="text" autocomplete="address-line1" placeholder="Rua das Flores">
+          <span class="aviso">Informe a rua.</span>
+        </div>
+        <div class="campo largo">
+          <label for="compl">Complemento <span style="font-weight:600">(opcional)</span></label>
+          <input id="compl" name="compl" type="text" placeholder="Apto 42, bloco B">
+        </div>
+        <div class="campo" id="c-bairro">
+          <label for="bairro">Bairro</label>
+          <input id="bairro" name="bairro" type="text" placeholder="Centro">
+          <span class="aviso">Informe o bairro.</span>
+        </div>
+        <div class="campo" id="c-cidade">
+          <label for="cidade">Cidade</label>
+          <input id="cidade" name="cidade" type="text" autocomplete="address-level2" placeholder="São Paulo">
+          <span class="aviso">Informe a cidade.</span>
+        </div>
+        <div class="campo" id="c-uf">
+          <label for="uf">Estado</label>
+          <select id="uf" name="uf">
+            <option value="">Selecione</option>
+          </select>
+          <span class="aviso">Selecione o estado.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2><i>3</i>Forma de pagamento</h2>
+      <div class="pag" id="pag">
+        <button type="button" class="pag-op ativo" data-pag="pix" onclick="escolherPag(this,'pix')">
+          <span class="radio"></span>
+          <span class="icone">
+            <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+              <path fill="#32BCAD" d="M242.4 292.5C247.8 287.1 257.1 287.1 262.5 292.5L339.5 369.5C353.7 383.7 372.6 391.5 392.6 391.5H407.7L310.6 488.6C280.3 518.1 231.1 518.1 200.8 488.6L103.3 391.1H112.6C132.6 391.1 151.5 383.3 165.7 369.1L242.4 292.5zM262.5 218.9C256.9 224.3 247.9 224.5 242.4 218.9L165.7 142.2C151.5 127.1 132.6 120.2 112.6 120.2H103.3L200.8 22.76C231.1-7.586 280.3-7.586 310.6 22.76L407.8 119.9H392.6C372.6 119.9 353.7 127.7 339.5 141.9L262.5 218.9zM112.6 142.7C126.4 142.7 139.1 148.3 149.7 158.1L226.4 234.8C233.6 241.1 243 245.6 252.5 245.6C261.9 245.6 271.3 241.1 278.5 234.8L355.5 157.8C365.3 148.1 378.8 142.5 392.6 142.5H430.3L488.6 200.8C518.1 231.1 518.1 280.3 488.6 310.6L430.3 368.9H392.6C378.8 368.9 365.3 363.3 355.5 353.5L278.5 276.5C264.6 262.6 240.3 262.6 226.4 276.6L149.7 353.2C139.1 363 126.4 368.6 112.6 368.6H76.61L22.76 310.6C-7.586 280.3-7.586 231.1 22.76 200.8L76.61 142.7H112.6z"/>
+            </svg>
+          </span>
+          <span class="txt"><b>Pix</b><small>Aprovação na hora</small></span>
+          <span class="tag">MAIS RÁPIDO</span>
+        </button>
+        <button type="button" class="pag-op" data-pag="cartao" onclick="escolherPag(this,'cartao')">
+          <span class="radio"></span>
+          <span class="icone">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="1.5" y="4" width="21" height="16" rx="2.6" fill="none" stroke="#7b1fa2" stroke-width="1.8"/>
+              <path d="M1.5 9.2h21" stroke="#7b1fa2" stroke-width="2.4"/>
+              <rect x="4.6" y="13.6" width="5.6" height="2.1" rx="1.05" fill="#d94fb0"/>
+            </svg>
+          </span>
+          <span class="txt"><b>Cartão de crédito</b><small id="pagParcela">em até 12x</small></span>
+        </button>
+      </div>
+
+      <div class="pag-aviso">
+        <b>Etapa de teste:</b> o processamento de pagamento ainda não está ligado.
+        Ao finalizar, o pedido é registrado e você vê o resumo — nada é cobrado.
+      </div>
+
+      <button type="submit" class="cta" id="btnFinalizar" style="margin-top:18px">FINALIZAR PEDIDO →</button>
+
+      <div class="micro">
+        <span>🔒 Dados protegidos</span>
+        <span>🚚 Frete grátis</span>
+        <span>📦 Pedido monitorado</span>
+      </div>
+    </div>
+  </form>
+
+  <aside class="lado">
+    <div class="resumo" id="resumo">
+      <button type="button" class="resumo-topo" onclick="alternarResumo()">
+        <img src="./img/desc-cores.jpg" alt="">
+        <span class="rt-info">
+          <b>Resumo do pedido</b>
+          <small id="rtQtd">0 itens</small>
+        </span>
+        <span class="rt-total" id="rtTotal">R$ 0,00</span>
+        <span class="rt-seta">▼</span>
+      </button>
+      <div class="resumo-corpo" id="resumoCorpo"></div>
+    </div>
+  </aside>
+
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <img src="./img/logo-navya.png" alt="Navya Beauty Cosmetics" loading="lazy">
+    <span>© Navya Beauty Cosmetics · Todos os direitos reservados</span>
+  </div>
+</footer>
+
+<div class="barra" id="barra" hidden>
+  <div class="barra-preco">
+    <b id="barraTotal">R$ 0,00</b>
+    <span id="barraQtd">0 itens</span>
+  </div>
+  <button type="button" class="cta" onclick="document.getElementById('form').requestSubmit()">FINALIZAR →</button>
+</div>
+
+<script src="./js/loja.js"></script>
+<script>
+/* ============================================================
+   CHECKOUT
+   Precos e sacola vem do js/loja.js.
+
+   IMPORTANTE para a proxima etapa (Appmax): o total calculado
+   aqui é só para MOSTRAR. Quando o pagamento entrar, o servidor
+   precisa recalcular a partir de cor + quantidade. Nunca aceitar
+   o valor que o navegador enviar.
+   ============================================================ */
+
+var UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
+           "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+
+var pagEscolhido = "pix";
+var CHAVE_DADOS = "navya_dados";
+
+/* --- Mascaras ---------------------------------------------- */
+function soNumeros(s){ return (s || "").replace(/\D/g, ""); }
+
+function mascaraCPF(v){
+  v = soNumeros(v).slice(0, 11);
+  if (v.length > 9)  return v.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, "$1.$2.$3-$4");
+  if (v.length > 6)  return v.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
+  if (v.length > 3)  return v.replace(/(\d{3})(\d+)/, "$1.$2");
+  return v;
+}
+
+function mascaraTel(v){
+  v = soNumeros(v).slice(0, 11);
+  if (v.length > 10) return v.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
+  if (v.length > 6)  return v.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+  if (v.length > 2)  return v.replace(/(\d{2})(\d+)/, "($1) $2");
+  if (v.length > 0)  return "(" + v;
+  return v;
+}
+
+function mascaraCEP(v){
+  v = soNumeros(v).slice(0, 8);
+  return v.length > 5 ? v.replace(/(\d{5})(\d+)/, "$1-$2") : v;
+}
+
+/* --- Validacoes -------------------------------------------- */
+function cpfValido(cpf){
+  cpf = soNumeros(cpf);
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;   /* 111.111.111-11 e afins */
+
+  var soma = 0, resto, i;
+  for (i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i-1, i), 10) * (11 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpf.substring(9, 10), 10)) return false;
+
+  soma = 0;
+  for (i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i-1, i), 10) * (12 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  return resto === parseInt(cpf.substring(10, 11), 10);
+}
+
+function emailValido(e){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((e || "").trim());
+}
+
+function nomeValido(n){
+  var p = (n || "").trim().split(/\s+/);
+  return p.length >= 2 && p[0].length >= 2 && p[p.length-1].length >= 2;
+}
+
+function marcar(idCampo, ok){
+  var el = document.getElementById(idCampo);
+  if (el) el.classList.toggle("ruim", !ok);
+  return ok;
+}
+
+/* --- CEP: preenche o endereco ------------------------------- */
+var cepBuscando = false;
+
+function buscarCEP(){
+  var cep = soNumeros(document.getElementById("cep").value);
+  var dica = document.getElementById("cepDica");
+  if (cep.length !== 8 || cepBuscando) return;
+
+  cepBuscando = true;
+  dica.textContent = "Buscando endereço...";
+
+  /* Se a consulta falhar (sem internet, servico fora), a pessoa
+     digita o endereco na mao. O checkout nunca trava por isso. */
+  fetch("https://viacep.com.br/ws/" + cep + "/json/")
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.erro){
+        dica.textContent = "CEP não encontrado. Preencha abaixo.";
+        return;
+      }
+      if (d.logradouro) document.getElementById("rua").value = d.logradouro;
+      if (d.bairro)     document.getElementById("bairro").value = d.bairro;
+      if (d.localidade) document.getElementById("cidade").value = d.localidade;
+      if (d.uf)         document.getElementById("uf").value = d.uf;
+      ["c-rua","c-bairro","c-cidade","c-uf"].forEach(function(c){
+        document.getElementById(c).classList.remove("ruim");
+      });
+      dica.textContent = "Endereço preenchido. Confira o número.";
+      document.getElementById("numero").focus();
+    })
+    .catch(function(){
+      dica.textContent = "Não deu para buscar. Preencha abaixo.";
+    })
+    .finally(function(){ cepBuscando = false; });
+}
+
+/* --- Resumo do pedido --------------------------------------- */
+function alternarResumo(){
+  document.getElementById("resumo").classList.toggle("aberto");
+}
+
+function montarResumo(r){
+  var html = "";
+  r.linhas.forEach(function(l){
+    html +=
+      '<div class="ci">' +
+        '<span class="ci-bola" style="background:' + CORES_HEX[l.cor] + '"></span>' +
+        '<span class="ci-info">' +
+          '<b>' + PRODUTO_NOME + '</b>' +
+          '<small>' + l.cor + ' · ' + l.qtd + ' un.</small>' +
+        '</span>' +
+        '<span class="ci-val">' + brl(l.valor) + '</span>' +
+      '</div>';
+  });
+
+  html +=
+    '<div class="linha"><span>Subtotal (' + r.unidades + (r.unidades > 1 ? " itens" : " item") + ')</span><span>' + brl(r.cheio) + '</span></div>' +
+    '<div class="linha eco"><span>Desconto</span><span>− ' + brl(r.economia) + '</span></div>' +
+    '<div class="linha"><span>Frete</span><span style="color:var(--green);font-weight:800">Grátis</span></div>' +
+    '<div class="linha total"><span>Total</span><span>' + brl(r.total) + '</span></div>' +
+    '<div class="parcela-txt">ou ' + PARCELAS + 'x de ' + brl(r.parcela) + '</div>';
+
+  return html;
+}
+
+function renderResumo(){
+  var r = resumoPedido();
+  var rotulo = r.unidades + (r.unidades > 1 ? " itens" : " item");
+
+  document.getElementById("resumoCorpo").innerHTML = montarResumo(r);
+  document.getElementById("rtQtd").textContent = rotulo;
+  document.getElementById("rtTotal").textContent = brl(r.total);
+  document.getElementById("barraTotal").textContent = brl(r.total);
+  document.getElementById("barraQtd").textContent = rotulo;
+  document.getElementById("pagParcela").textContent =
+    "em até " + PARCELAS + "x de " + brl(r.parcela);
+}
+
+/* --- Pagamento ---------------------------------------------- */
+function escolherPag(botao, tipo){
+  pagEscolhido = tipo;
+  document.querySelectorAll(".pag-op").forEach(function(b){
+    b.classList.toggle("ativo", b === botao);
+  });
+  document.getElementById("passo3").classList.add("ativo");
+}
+
+/* --- Lembrar dados digitados -------------------------------- */
+var CAMPOS = ["nome","email","cpf","tel","cep","numero","rua","compl","bairro","cidade","uf"];
+
+function salvarDados(){
+  try {
+    var d = {};
+    CAMPOS.forEach(function(c){ d[c] = document.getElementById(c).value; });
+    localStorage.setItem(CHAVE_DADOS, JSON.stringify(d));
+  } catch(e){}
+}
+
+function carregarDados(){
+  try {
+    var bruto = localStorage.getItem(CHAVE_DADOS);
+    if (!bruto) return;
+    var d = JSON.parse(bruto);
+    CAMPOS.forEach(function(c){
+      if (typeof d[c] === "string") document.getElementById(c).value = d[c];
+    });
+  } catch(e){}
+}
+
+/* --- Finalizar ---------------------------------------------- */
+function validarTudo(){
+  var ok = true;
+  ok = marcar("c-nome",   nomeValido(document.getElementById("nome").value)) && ok;
+  ok = marcar("c-email",  emailValido(document.getElementById("email").value)) && ok;
+  ok = marcar("c-cpf",    cpfValido(document.getElementById("cpf").value)) && ok;
+  ok = marcar("c-tel",    soNumeros(document.getElementById("tel").value).length >= 10) && ok;
+  ok = marcar("c-cep",    soNumeros(document.getElementById("cep").value).length === 8) && ok;
+  ok = marcar("c-numero", document.getElementById("numero").value.trim() !== "") && ok;
+  ok = marcar("c-rua",    document.getElementById("rua").value.trim() !== "") && ok;
+  ok = marcar("c-bairro", document.getElementById("bairro").value.trim() !== "") && ok;
+  ok = marcar("c-cidade", document.getElementById("cidade").value.trim() !== "") && ok;
+  ok = marcar("c-uf",     document.getElementById("uf").value !== "") && ok;
+  return ok;
+}
+
+function finalizar(e){
+  e.preventDefault();
+  salvarDados();
+
+  if (!validarTudo()){
+    var ruim = document.querySelector(".campo.ruim");
+    if (ruim){
+      ruim.scrollIntoView({ behavior:"smooth", block:"center" });
+      var campo = ruim.querySelector("input, select");
+      if (campo) setTimeout(function(){ campo.focus(); }, 400);
+    }
+    return;
+  }
+
+  var r = resumoPedido();
+  var numero = "NV" + Date.now().toString().slice(-8);
+
+  /* ---------------------------------------------------------
+     AQUI entra a Appmax na proxima etapa:
+     em vez de mostrar a tela de confirmacao, esta funcao vai
+     enviar { itens, cliente, endereco, pagamento } para uma
+     funcao no Vercel (/api/checkout), que recalcula o total,
+     cria o cliente e o pedido na Appmax e devolve o link de
+     pagamento (Pix ou cartao).
+     --------------------------------------------------------- */
+
+  document.getElementById("feitoNumero").textContent = "#" + numero;
+  document.getElementById("feitoTexto").textContent =
+    "Obrigado, " + document.getElementById("nome").value.trim().split(/\s+/)[0] +
+    "! Forma de pagamento escolhida: " +
+    ({ pix:"Pix", cartao:"Cartão de crédito" })[pagEscolhido] + ".";
+  document.getElementById("feitoResumo").innerHTML =
+    '<div class="resumo-corpo" style="display:block;border-top:0;padding-top:4px">' +
+    montarResumo(r) + '</div>';
+
+  document.getElementById("telaCheckout").hidden = true;
+  document.getElementById("barra").hidden = true;
+  document.getElementById("telaFeito").hidden = false;
+  document.getElementById("passo3").classList.remove("ativo");
+  document.getElementById("passo3").classList.add("feito");
+  document.getElementById("passo3").querySelector("i").textContent = "✓";
+  window.scrollTo({ top: 0, behavior:"smooth" });
+
+  limparCarrinho();
+}
+
+/* --- Inicio ------------------------------------------------- */
+document.addEventListener("DOMContentLoaded", function(){
+  /* estados */
+  var uf = document.getElementById("uf");
+  UFS.forEach(function(s){
+    var o = document.createElement("option");
+    o.value = s; o.textContent = s;
+    uf.appendChild(o);
+  });
+
+  carregarCarrinho();
+
+  if (totalUnidades() === 0){
+    document.getElementById("telaVazia").hidden = false;
+    return;
+  }
+
+  document.getElementById("telaCheckout").hidden = false;
+  document.getElementById("barra").hidden = false;
+  renderResumo();
+  carregarDados();
+
+  /* mascaras ao digitar */
+  var cpf = document.getElementById("cpf");
+  cpf.addEventListener("input", function(){ this.value = mascaraCPF(this.value); });
+
+  var tel = document.getElementById("tel");
+  tel.addEventListener("input", function(){ this.value = mascaraTel(this.value); });
+
+  var cep = document.getElementById("cep");
+  cep.addEventListener("input", function(){
+    this.value = mascaraCEP(this.value);
+    if (soNumeros(this.value).length === 8) buscarCEP();
+  });
+  cep.addEventListener("blur", buscarCEP);
+
+  /* tira o vermelho assim que a pessoa corrige */
+  document.querySelectorAll(".campo input, .campo select").forEach(function(el){
+    el.addEventListener("input", function(){
+      var c = el.closest(".campo");
+      if (c) c.classList.remove("ruim");
+    });
+    el.addEventListener("blur", salvarDados);
+  });
+
+  document.getElementById("form").addEventListener("submit", finalizar);
+});
+</script>
+
+</body>
+</html>

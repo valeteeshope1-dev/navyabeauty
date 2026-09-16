@@ -1,0 +1,9 @@
+# PNGs originais das fotos (18 MB) — o site usa os .jpg otimizados
+img/original/
+
+# Vercel
+.vercel/
+
+node_modules/
+.DS_Store
+Thumbs.db

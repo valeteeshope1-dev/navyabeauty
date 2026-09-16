@@ -1,0 +1,8 @@
+# PNGs originais das fotos: ficam so no seu PC, o site usa os .jpg otimizados
+img/original
+
+# servidor local de desenvolvimento, nao vai para producao
+server.js
+
+.DS_Store
+Thumbs.db
