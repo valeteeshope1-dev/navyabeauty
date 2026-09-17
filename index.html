@@ -238,6 +238,19 @@ h2{font-size:clamp(27px,6.6vw,34px);line-height:1.1;letter-spacing:-.035em;margi
 .step h4{margin:0 0 3px;font-size:16px}
 .step p{margin:0;color:var(--muted);font-size:14px}
 
+/* --- Imagem unica da secao Ritual ------------------------------ */
+.figura{
+  background:linear-gradient(150deg,#fff,#f6e4f2);
+  border:1px solid var(--border);border-radius:24px;
+  padding:10px;box-shadow:var(--shadow);
+  max-width:540px;margin:0 auto
+}
+/* a foto é bem alta (0,56); o recorte mantem rosto e escova no quadro */
+.figura img{
+  width:100%;border-radius:16px;display:block;
+  aspect-ratio:3/4;object-fit:cover;object-position:center 22%
+}
+
 /* --- Ficha técnica -------------------------------------------- */
 .spec-box{
   background:#fff;border:1px solid var(--border);border-radius:var(--radius);
@@ -586,6 +599,19 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
         </div>
 
         <button type="button" class="cta" onclick="buyNow()">COMPRAR AGORA →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RITUAL ===== -->
+  <section style="padding-top:10px">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Feita para o seu ritual</div>
+        <h2>Do banheiro ao dia a dia, sempre com você.</h2>
+      </div>
+      <div class="figura">
+        <img src="./img/escova-penteadeira.jpg" alt="Mulher penteando o cabelo com a Escova Mágica Retrátil Premium" loading="lazy" decoding="async">
       </div>
     </div>
   </section>
