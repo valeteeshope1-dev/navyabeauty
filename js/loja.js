@@ -11,7 +11,7 @@
 
 /* --- Tabela de precos: mexa so aqui ------------------------- */
 var PRECO_CHEIO = 58.90;                          /* riscado, por unidade */
-var TOTAIS      = { 1: 33.90, 2: 52.90, 3: 76.90 };
+var TOTAIS      = { 1: 37.90, 2: 58.90, 3: 84.90 };
 var UNIT_ACIMA  = 22.95;                          /* a partir de 4 unidades */
 var QTD_MAX     = 99;
 var PARCELAS    = 12;
