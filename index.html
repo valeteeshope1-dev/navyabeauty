@@ -238,25 +238,15 @@ h2{font-size:clamp(27px,6.6vw,34px);line-height:1.1;letter-spacing:-.035em;margi
 .step h4{margin:0 0 3px;font-size:16px}
 .step p{margin:0;color:var(--muted);font-size:14px}
 
-/* --- Galeria: carrossel deslizante no mobile ------------------- */
-.gallery{
-  display:flex;gap:12px;
-  overflow-x:auto;scroll-snap-type:x mandatory;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-  margin:0 -18px;padding:0 18px 4px
+/* --- Imagem unica ---------------------------------------------- */
+.figura{
+  background:linear-gradient(150deg,#fff,#f6e4f2);
+  border:1px solid var(--border);border-radius:24px;
+  padding:10px;box-shadow:var(--shadow);
+  max-width:720px;margin:0 auto
 }
-.gallery::-webkit-scrollbar{display:none}
-.gallery img{
-  scroll-snap-align:center;
-  flex:0 0 82%;
-  aspect-ratio:1/1;object-fit:cover;
-  border-radius:20px;border:1px solid var(--border)
-}
-.swipe-hint{
-  text-align:center;font-size:12px;color:var(--muted);
-  font-weight:700;margin-top:12px
-}
+/* height auto: a arte tem texto, cortar comeria as legendas */
+.figura img{width:100%;height:auto;border-radius:16px;display:block}
 
 /* --- Ficha técnica -------------------------------------------- */
 .spec-box{
@@ -347,9 +337,6 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
   .problem,.solution{padding:28px}
   .features{grid-template-columns:1fr 1fr;gap:16px}
   .feature{padding:24px}
-  .gallery{margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;overflow:visible}
-  .gallery img{flex:none;aspect-ratio:1.15/1}
-  .swipe-hint{display:none}
   .spec-list{grid-template-columns:1fr 1fr}
   .footer-inner{flex-direction:row;justify-content:space-between;text-align:left}
 }
@@ -389,7 +376,6 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
   .destaque-img img{border-radius:22px;aspect-ratio:3/4}
   .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:42px;align-items:center}
   .demo-img{padding:18px;border-radius:28px}
-  .gallery{grid-template-columns:repeat(3,1fr);gap:18px}
   .spec-box{
     display:grid;grid-template-columns:.95fr 1.05fr;
     gap:28px;align-items:center;padding:30px
@@ -614,19 +600,16 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
     </div>
   </section>
 
-  <!-- ===== GALERIA ===== -->
+  <!-- ===== IMAGEM UNICA (antes era um carrossel) ===== -->
   <section style="padding-top:10px">
     <div class="wrap">
       <div class="section-head">
         <div class="kicker">Feita para o seu ritual</div>
         <h2>Da penteadeira ao banheiro, todo dia.</h2>
       </div>
-      <div class="gallery">
-        <img src="./img/escova-cabelo-seco.jpg" alt="Mulher usando a Escova Mágica Retrátil Premium no cabelo seco" loading="lazy" decoding="async">
-        <img src="./img/escova-cores.jpg" alt="Escova Mágica Retrátil Premium nas cores branco, verde e rosa" loading="lazy" decoding="async">
-        <img src="./img/desc-detalhes.jpg" alt="Detalhes da Escova Mágica Retrátil: cerdas arredondadas e anel que solta os fios presos" loading="lazy" decoding="async">
+      <div class="figura">
+        <img src="./img/escova-uso-detalhes.jpg" alt="Mulher desembaraçando o cabelo molhado com a Escova Mágica Retrátil Premium: design retrátil, puxe o pino e pinos tecnológicos" loading="lazy" decoding="async">
       </div>
-      <p class="swipe-hint">← arraste para ver mais →</p>
     </div>
   </section>
 
