@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#7b1fa2">
 <title>Escova Mágica Retrátil Premium – Navya Beauty Cosmetics</title>
 <meta name="description" content="A escova que se limpa sozinha. Gire o anel, as cerdas se retraem e todos os fios saem de uma vez. Desembaraça sem puxar e serve para cabelo seco ou molhado.">
-<link rel="preload" as="image" href="./img/escova-limpeza-1s.jpg">
+<link rel="preload" as="image" href="./img/escova-hero.jpg">
 <style>
 /* ============================================================
    NAVYA — Escova Mágica Retrátil Premium
@@ -95,7 +95,6 @@ section{padding:52px 0}
   border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow)
 }
 .visual img{border-radius:17px;aspect-ratio:1/1;object-fit:cover;width:100%}
-.float-badge{display:none} /* escondidas no mobile: poluem a foto */
 
 .hero-copy{order:1}
 .eyebrow{
@@ -372,13 +371,6 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
   .hero-copy{order:0}
   .visual{order:1;padding:22px;border-radius:34px}
   .visual img{border-radius:24px}
-  .float-badge{
-    display:block;position:absolute;background:var(--ink);color:#fff;
-    border-radius:15px;padding:11px 14px;font-size:12px;font-weight:900;
-    box-shadow:0 12px 30px rgba(0,0,0,.18)
-  }
-  .badge-one{left:0;bottom:52px;transform:translateX(-18%)}
-  .badge-two{right:-12px;top:45px;background:#fff;color:var(--ink);border:1px solid var(--border)}
   h1{font-size:clamp(48px,5vw,68px);margin:20px 0 20px}
   .hero-sub{font-size:19px;max-width:620px}
   .offer-card{max-width:520px;padding:20px}
@@ -424,9 +416,8 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
     <div class="wrap hero-grid">
 
       <div class="visual">
-        <img src="./img/escova-limpeza-1s.jpg" alt="Escova Mágica Retrátil Premium liberando todos os fios presos de uma só vez" fetchpriority="high" decoding="async">
-        <div class="float-badge badge-one">💫 Gire o anel → fios soltos</div>
-        <div class="float-badge badge-two">Sem arrancar fios<br><strong>Escova mais macia</strong></div>
+        <!-- a imagem ja traz as explicacoes; os selos flutuantes iriam cobri-las -->
+        <img src="./img/escova-hero.jpg" alt="Escova Mágica Retrátil Premium: sistema autolimpante retrátil, pontas em silicone e anel de liberação" fetchpriority="high" decoding="async">
       </div>
 
       <div class="hero-copy">
