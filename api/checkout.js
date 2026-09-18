@@ -160,7 +160,24 @@ module.exports = async function handler(req, res){
       }
     });
 
-    var status = (respCartao.order && respCartao.order.status) || "pendente";
+    /* A resposta do pagamento NAO traz o status do pedido — traz
+       pay_reference e upsell_hash. Quem recusa devolve 403, entao
+       chegar aqui ja significa cobranca aceita. Confirmamos o
+       status consultando o pedido, e se a consulta falhar valemos
+       o que a propria resposta 200 significa. */
+    var status = (respCartao.order && respCartao.order.status) || "";
+
+    if (!status){
+      try {
+        var conferencia = await appmax.consultarPedido(orderId);
+        status = (conferencia && conferencia.order && conferencia.order.status) || "aprovado";
+      } catch (e) {
+        console.error("[checkout] consulta pos-pagamento falhou:", e.detalhe || e.message);
+        status = "aprovado";
+      }
+    }
+
+    var recusados = ["cancelado", "estornado", "reprovado"];
 
     return res.status(200).json({
       ok: true,
@@ -168,7 +185,7 @@ module.exports = async function handler(req, res){
       pedido: { id: orderId, status: status },
       total: pedido.total,
       pagamento: {
-        aprovado: status === "aprovado" || status === "autorizado",
+        aprovado: recusados.indexOf(String(status).toLowerCase()) === -1,
         parcelas: parcelas,
         status: status
       }

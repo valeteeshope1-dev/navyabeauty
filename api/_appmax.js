@@ -79,11 +79,23 @@ async function lerJSON(r){
   catch (e) { return { _cru: texto.slice(0, 400) }; }
 }
 
+/* A recusa do cartao chega assim:
+     "Pagamento não autorizado: AuthAndCapture failed: Transação nao
+      autorizada pela operadora do cartão, confira seus dados..."
+   O miolo e uma frase boa para o cliente; o "AuthAndCapture failed"
+   e nome de rotina interna do gateway e nao diz nada a ninguem. */
+function limpar(frase){
+  return String(frase)
+    .replace(/\b[A-Za-z]{2,} failed:\s*/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 /* Traduz o erro da Appmax para uma frase que o cliente entende. */
 function mensagemDoErro(dados, padrao){
   var e = dados && (dados.error || dados.errors);
   if (!e) return padrao;
-  if (typeof e.message === "string") return e.message;
+  if (typeof e.message === "string") return limpar(e.message);
 
   /* 422 vem assim: { errors: { message: { campo: ["motivo"] } } } */
   if (e.message && typeof e.message === "object"){

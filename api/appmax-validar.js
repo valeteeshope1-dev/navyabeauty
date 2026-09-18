@@ -70,11 +70,11 @@ module.exports = async function handler(req, res){
   console.log("[appmax-validar] content-type: " + (req.headers["content-type"] || "(nenhum)"));
   console.log("[appmax-validar] corpo: " + JSON.stringify(corpo).slice(0, 600));
   console.log("[appmax-validar] EXTERNAL_ID GERADO: " + externalId);
-  if (corpo.client_id){
-    console.log("[appmax-validar] merchant client_id veio no payload: " + corpo.client_id);
-  }
-  if (corpo.client_secret){
-    console.log("[appmax-validar] merchant client_secret veio no payload: " + corpo.client_secret);
+  /* O payload pode trazer as credenciais do merchant. NAO registramos
+     o valor: log nao e lugar de segredo, e essas credenciais nao
+     expiram. Registramos so que vieram. */
+  if (corpo.client_id || corpo.client_secret){
+    console.log("[appmax-validar] o payload trouxe credenciais de merchant (valores omitidos do log)");
   }
 
   return res.status(200).json({ external_id: externalId, alias: ALIAS });
