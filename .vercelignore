@@ -6,3 +6,9 @@ server.js
 
 .DS_Store
 Thumbs.db
+
+# credenciais locais: no Vercel as variaveis vem do painel
+.env.local
+
+# teste de linha de comando, nao vai para producao
+scripts

@@ -7,3 +7,9 @@ img/original/
 node_modules/
 .DS_Store
 Thumbs.db
+
+# credenciais locais da Appmax — nunca versionar
+.env.local
+
+# hash temporario da instalacao
+scripts/.instalacao.json
