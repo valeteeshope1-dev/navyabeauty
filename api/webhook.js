@@ -1,36 +1,52 @@
 /* ============================================================
    POST /api/webhook
-   A Appmax avisa aqui quando o pedido muda de estado — e o unico
-   jeito confiavel de saber que o Pix foi pago, porque o cliente
-   pode fechar a aba antes.
 
-   A Appmax NAO assina os webhooks (sem HMAC, sem token). Por isso
-   protegemos pelo proprio endereco: cadastre a URL com o segredo,
-     https://navyabeauty.com/api/webhook?k=SEU_SEGREDO
-   e guarde o mesmo valor em APPMAX_WEBHOOK_SECRET.
+   O BravoPay avisa aqui quando a cobranca muda de estado. E o unico
+   jeito confiavel de saber que o Pix foi pago: o cliente pode pagar
+   e fechar a aba antes de a tela perceber.
 
-   Regra da Appmax: responder 200 em ate 5 segundos, senao ela
-   reenvia (4 tentativas e desiste). Entao respondemos primeiro
-   e so depois processamos.
+   Cadastre em Dashboard → Integracoes:
+       https://navyabeauty.com/api/webhook
+
+   Cada URL cadastrada recebe um segredo proprio (whsec_...). Guarde
+   esse valor em BRAVOPAY_WEBHOOK_SECRET: e com ele que a assinatura
+   e conferida. Sem o segredo configurado, o endpoint recusa tudo —
+   aceitar avisos de "pedido pago" sem verificar seria pedir para
+   alguem forjar vendas.
+
+   Regra da casa: responder 200 em menos de 5 segundos, senao eles
+   reenviam. Por isso respondemos primeiro e processamos depois.
    ============================================================ */
 
-var INTERESSAM = [
-  "order_paid", "order_paid_by_pix", "order_approved",
-  "order_pix_created", "order_pix_expired",
-  "order_refund", "order_partial_refund",
-  "order_refused_by_risk", "payment_not_authorized",
-  "order_billet_overdue", "order_integrated"
-];
+var bravo = require("./_bravopay.js");
 
-async function lerCorpo(req){
-  if (req.body && typeof req.body === "object") return req.body;
-  if (typeof req.body === "string"){
-    try { return JSON.parse(req.body); } catch (e) { return {}; }
+/* O corpo tem que ser lido CRU, byte a byte: a assinatura e
+   calculada sobre a string exata que eles enviaram. Um JSON.parse
+   seguido de JSON.stringify muda espacos e ordem de chaves, e a
+   conferencia passa a falhar sempre. */
+async function corpoCru(req){
+  if (typeof req.body === "string") return req.body;
+
+  /* A Vercel ja entrega req.body pronto em objeto quando o
+     Content-Type e JSON — e ai o cru se perdeu. Nesse caso
+     reserializamos, sabendo que a assinatura pode nao bater; o
+     ideal e ler do stream, que e o caminho abaixo. */
+  if (req.body && typeof req.body === "object"){
+    return { texto: JSON.stringify(req.body), reserializado: true };
   }
+
   var cru = "";
   for await (var pedaco of req) cru += pedaco;
-  try { return cru ? JSON.parse(cru) : {}; } catch (e) { return {}; }
+  return { texto: cru, reserializado: false };
 }
+
+var INTERESSAM = [
+  "transaction.paid",
+  "transaction.expired",
+  "transaction.refunded",
+  "transaction.chargeback",
+  "transaction.failed"
+];
 
 module.exports = async function handler(req, res){
   if (req.method !== "POST"){
@@ -38,37 +54,86 @@ module.exports = async function handler(req, res){
     return res.status(405).json({ ok: false });
   }
 
-  var segredo = process.env.APPMAX_WEBHOOK_SECRET;
-  if (segredo && (!req.query || req.query.k !== segredo)){
-    console.warn("[webhook] chamada sem o segredo correto");
-    return res.status(401).json({ ok: false });
+  var segredo = process.env.BRAVOPAY_WEBHOOK_SECRET;
+  if (!segredo){
+    console.error("[webhook] BRAVOPAY_WEBHOOK_SECRET nao configurado — recusando");
+    return res.status(503).json({ ok: false });
   }
 
-  var corpo = await lerCorpo(req);
+  var lido = await corpoCru(req);
+  var texto = typeof lido === "string" ? lido : lido.texto;
+  var reserializado = typeof lido === "string" ? false : lido.reserializado;
+
+  var cabecalho = req.headers["bravopay-signature"] ||
+                  req.headers["x-bravopay-signature"] || "";
+
+  var assinado = bravo.assinaturaValida(texto, cabecalho, segredo);
+
+  /* Quando o corpo chega ja convertido em objeto, o texto cru se
+     perdeu e a assinatura pode falhar mesmo vindo do BravoPay — um
+     espaco a mais no JSON original basta. Perder o aviso de "pago"
+     e pior do que parece: o cliente paga, fecha a aba, e a venda
+     fica pendente para sempre.
+
+     Entao, nesse caso especifico, em vez de confiar OU descartar,
+     perguntamos a propria API com as nossas credenciais. Se ela
+     disser que esta pago, o evento e legitimo — nao importa quem o
+     enviou. Se nao disser, cai fora. Ninguem forja venda assim. */
+  if (!assinado && reserializado){
+    var conferido = false;
+    try {
+      var evt = JSON.parse(texto);
+      var ref = evt && evt.data && evt.data.external_reference;
+
+      if (ref){
+        var r = await bravo.consultarPorReferencia(ref);
+        var lista = (r && r.data) || [];
+        conferido = lista.some(function(t){
+          return String(t.status).toUpperCase() === "PAID";
+        });
+      }
+    } catch (e) {
+      console.error("[webhook] falha ao conferir na API:", e.message);
+    }
+
+    if (conferido){
+      console.warn("[webhook] assinatura nao bateu (corpo reserializado), " +
+                   "mas a API confirmou o pagamento — aceito");
+      assinado = true;
+    }
+  }
+
+  if (!assinado){
+    console.warn("[webhook] assinatura invalida — recusado");
+    return res.status(401).json({ ok: false });
+  }
 
   /* Responde JA. O que vier depois nao pode segurar a resposta. */
   res.status(200).json({ ok: true });
 
   try {
-    var evento = corpo.event || "desconhecido";
-    var pedido = (corpo.data && corpo.data.order) || {};
-    var cliente = (corpo.data && corpo.data.customer) || {};
+    var evento = JSON.parse(texto);
+    var tipo = evento.type || "desconhecido";
+    var tx = evento.data || {};
 
-    if (INTERESSAM.indexOf(evento) === -1){
-      console.log("[webhook] ignorado:", evento);
+    if (INTERESSAM.indexOf(tipo) === -1){
+      console.log("[webhook] ignorado: " + tipo);
       return;
     }
 
-    /* Por enquanto o registro e o log do Vercel — da para acompanhar
-       em Vercel > Logs. Quando houver banco ou e-mail de confirmacao,
-       e aqui que entram. */
-    console.log("[webhook]", JSON.stringify({
-      evento: evento,
-      pedido: pedido.id,
-      status: pedido.status,
-      total_pago: pedido.total_paid,
-      cliente: cliente.email
+    /* O id do evento e estavel entre reenvios: e por ele que se
+       deduplica quando houver banco. Por enquanto vai para o log. */
+    console.log("[webhook] " + JSON.stringify({
+      evento_id: evento.id,
+      tipo: tipo,
+      pedido: tx.external_reference,
+      transacao: tx.id,
+      valor: tx.amount_cents,
+      liquido: tx.net_cents,
+      pago_em: tx.paid_at,
+      entrega: tx.metadata || null
     }));
+
   } catch (e) {
     console.error("[webhook] falha ao processar:", e.message);
   }

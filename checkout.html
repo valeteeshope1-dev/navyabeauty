@@ -271,15 +271,7 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
   .passos{padding:22px 0 6px;font-size:12.5px}
 }
 
-/* --- Pagamento: cartao, Pix e erros ------------------------- */
-.cartao-campos{margin-top:14px;display:none}
-.cartao-campos.aberto{display:block}
-.cartao-campos .bandeira{
-  font-size:11.5px;font-weight:800;color:var(--purple);
-  margin-top:4px;min-height:14px
-}
-.parcelas select{width:100%}
-
+/* --- Pagamento: Pix e erros --------------------------------- */
 .erro-caixa{
   display:none;margin-top:14px;padding:12px 14px;border-radius:12px;
   background:#fdecec;border:1px solid #f3c4c4;color:#8e1f1f;
@@ -401,18 +393,12 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
   </div>
 </div>
 
-<!-- Gatilho da coleta de IP do appmax.js. Precisa existir no DOM
-     antes do init; nao aparece para ninguem. -->
-<span class="appmax-ip" hidden></span>
+
 
 <!-- checkout -->
 <main class="wrap colunas" id="telaCheckout" hidden>
 
-  <!-- data-appmax-checkout: e este atributo que faz o appmax.js
-       trocar o cartao por um token, no proprio navegador, antes de
-       qualquer coisa sair daqui. Sem ele o numero do cartao viajaria
-       ate o nosso servidor — proibido fora do sandbox. -->
-  <form id="form" method="post" novalidate data-appmax-checkout>
+  <form id="form" novalidate>
 
     <div class="bloco">
       <h2><i>1</i>Seus dados</h2>
@@ -497,72 +483,8 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
           <span class="txt"><b>Pix</b><small>Aprovação na hora</small></span>
           <span class="tag">MAIS RÁPIDO</span>
         </button>
-        <button type="button" class="pag-op" data-pag="cartao" onclick="escolherPag(this,'cartao')">
-          <span class="radio"></span>
-          <span class="icone">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <rect x="1.5" y="4" width="21" height="16" rx="2.6" fill="none" stroke="#7b1fa2" stroke-width="1.8"/>
-              <path d="M1.5 9.2h21" stroke="#7b1fa2" stroke-width="2.4"/>
-              <rect x="4.6" y="13.6" width="5.6" height="2.1" rx="1.05" fill="#d94fb0"/>
-            </svg>
-          </span>
-          <span class="txt"><b>Cartão de crédito</b><small id="pagParcela">em até 3x</small></span>
-        </button>
       </div>
 
-      <!-- Campos do cartao: so aparecem quando o cartao e escolhido.
-           O numero do cartao nunca e enviado ao nosso servidor em
-           producao — quem troca por um token e o appmax.js. -->
-      <div class="cartao-campos" id="cartaoCampos">
-        <div class="campos">
-          <div class="campo largo" id="c-cartao-num">
-            <label for="cartaoNum">Número do cartão</label>
-            <input id="cartaoNum" type="text" inputmode="numeric" autocomplete="cc-number"
-                   maxlength="23" placeholder="0000 0000 0000 0000"
-                   appmax-form-element="number">
-            <span class="bandeira" id="cartaoBandeira"></span>
-            <span class="aviso">Número de cartão inválido.</span>
-          </div>
-
-          <div class="campo largo" id="c-cartao-nome">
-            <label for="cartaoNome">Nome impresso no cartão</label>
-            <input id="cartaoNome" type="text" autocomplete="cc-name"
-                   placeholder="MARIA DA SILVA"
-                   appmax-form-element="holder_name">
-            <span class="aviso">Informe o nome como está no cartão.</span>
-          </div>
-
-          <div class="campo" id="c-cartao-val">
-            <label for="cartaoVal">Validade</label>
-            <input id="cartaoVal" type="text" inputmode="numeric" autocomplete="cc-exp"
-                   maxlength="7" placeholder="MM/AAAA">
-            <span class="aviso">Validade inválida ou vencida.</span>
-          </div>
-
-          <div class="campo" id="c-cartao-cvv">
-            <label for="cartaoCvv">Código de segurança</label>
-            <input id="cartaoCvv" type="text" inputmode="numeric" autocomplete="cc-csc"
-                   maxlength="4" placeholder="123"
-                   appmax-form-element="cvv">
-            <span class="aviso">CVV inválido.</span>
-          </div>
-
-          <div class="campo largo parcelas">
-            <label for="cartaoParcelas">Parcelamento</label>
-            <select id="cartaoParcelas"></select>
-            <span class="dica" id="parcelaAviso"></span>
-          </div>
-        </div>
-
-        <!-- O appmax.js le mes e ano separados; a pessoa digita MM/AAAA
-             num campo so e estes dois sao preenchidos por tras.
-             Sao campos de texto de verdade, apenas fora da area visivel:
-             input hidden pode ser ignorado por quem varre o formulario. -->
-        <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true">
-          <input type="text" id="cartaoMes" tabindex="-1" autocomplete="off" appmax-form-element="expiration_month">
-          <input type="text" id="cartaoAno" tabindex="-1" autocomplete="off" appmax-form-element="expiration_year">
-        </div>
-      </div>
 
       <div class="pag-aviso" id="pagAviso">
         <b>Pix:</b> você recebe o QR Code na próxima tela e a aprovação é na hora.
@@ -618,7 +540,7 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
    CHECKOUT
    Precos e sacola vem do js/loja.js.
 
-   IMPORTANTE para a proxima etapa (Appmax): o total calculado
+   IMPORTANTE: o total calculado
    aqui é só para MOSTRAR. Quando o pagamento entrar, o servidor
    precisa recalcular a partir de cor + quantidade. Nunca aceitar
    o valor que o navegador enviar.
@@ -749,7 +671,7 @@ function montarResumo(r){
     '<div class="linha eco"><span>Desconto</span><span>− ' + brl(r.economia) + '</span></div>' +
     '<div class="linha"><span>Frete</span><span style="color:var(--green);font-weight:800">Grátis</span></div>' +
     '<div class="linha total"><span>Total</span><span>' + brl(r.total) + '</span></div>' +
-    '<div class="parcela-txt">ou ' + PARCELAS + 'x de ' + brl(r.parcela) + '</div>';
+    '';
 
   return html;
 }
@@ -763,8 +685,6 @@ function renderResumo(){
   document.getElementById("rtTotal").textContent = brl(r.total);
   document.getElementById("barraTotal").textContent = brl(r.total);
   document.getElementById("barraQtd").textContent = rotulo;
-  document.getElementById("pagParcela").textContent =
-    "em até " + PARCELAS + "x de " + brl(r.parcela);
 }
 
 /* --- Pagamento ---------------------------------------------- */
@@ -775,10 +695,6 @@ function escolherPag(botao, tipo){
   });
   document.getElementById("passo3").classList.add("ativo");
 
-  document.getElementById("cartaoCampos").classList.toggle("aberto", tipo === "cartao");
-  document.getElementById("pagAviso").innerHTML = tipo === "cartao"
-    ? "<b>Cartão:</b> a cobrança é feita na hora e a confirmação aparece nesta tela."
-    : "<b>Pix:</b> você recebe o QR Code na próxima tela e a aprovação é na hora.";
   esconderErro();
 }
 
@@ -842,41 +758,18 @@ function ocupado(sim){
    O navegador manda cor + quantidade, nunca o preco: quem decide
    quanto custa e o servidor, em /api/checkout.
    ------------------------------------------------------------- */
-var aguardandoToken = false;
-var relogioToken = null;
-
 function finalizar(e){
   e.preventDefault();
   salvarDados();
   esconderErro();
 
-  if (!validarTudo() || !validarCartao()){
+  if (!validarTudo()){
     var ruim = document.querySelector(".campo.ruim");
     if (ruim){
       ruim.scrollIntoView({ behavior:"smooth", block:"center" });
       var campo = ruim.querySelector("input, select");
       if (campo) setTimeout(function(){ campo.focus(); }, 400);
     }
-    return;
-  }
-
-  /* No cartao, este mesmo submit acabou de disparar a tokenizacao no
-     appmax.js. Esperamos o token antes de falar com o nosso servidor:
-     o numero do cartao nao pode sair daqui. Quem retoma o envio e o
-     callback de sucesso do script, quando o token chega. */
-  if (pagEscolhido === "cartao" && !tokenDoCartao && appmaxPronto){
-    registrar("5. submit do cartao — esperando o token...");
-    aguardandoToken = true;
-    ocupado(true);
-
-    relogioToken = setTimeout(function(){
-      if (!aguardandoToken) return;
-      aguardandoToken = false;
-      ocupado(false);
-      registrar("6. TEMPO ESGOTADO: nenhum token e nenhum erro em 15s", true);
-      mostrarErro("Não foi possível validar o cartão agora. Confira os dados e tente novamente.");
-    }, 15000);
-
     return;
   }
 
@@ -902,12 +795,8 @@ function enviarPedido(){
       uf:     document.getElementById("uf").value
     },
     pagamento: pagEscolhido,
-    ip: ipDoCliente
+    ip: null
   };
-
-  if (pagEscolhido === "cartao"){
-    corpo.cartao = dadosDoCartao();
-  }
 
   ocupado(true);
 
@@ -919,27 +808,16 @@ function enviarPedido(){
   .then(function(r){ return r.json().catch(function(){ return { ok:false }; }); })
   .then(function(resp){
     ocupado(false);
-    tokenDoCartao = null;   /* uso unico: a proxima tentativa gera outro */
 
     if (!resp || !resp.ok){
       mostrarErro((resp && resp.erro) || "Não foi possível concluir o pedido. Tente novamente.");
       return;
     }
 
-    if (resp.forma === "pix"){
-      mostrarPix(resp);
-      return;
-    }
-
-    if (resp.pagamento && resp.pagamento.aprovado){
-      mostrarConfirmado(resp);
-    } else {
-      mostrarErro("O pagamento não foi aprovado. Confira os dados do cartão ou tente outro.");
-    }
+    mostrarPix(resp);
   })
   .catch(function(){
     ocupado(false);
-    tokenDoCartao = null;
     mostrarErro("Falha de conexão. Confira sua internet e tente de novo.");
   });
 }
@@ -959,10 +837,10 @@ function trocarDeTela(id){
 function mostrarConfirmado(resp){
   var r = resumoPedido();
 
-  document.getElementById("feitoNumero").textContent = "#" + resp.pedido.id;
+  document.getElementById("feitoNumero").textContent = "#" + resp.pedido.numero;
   document.getElementById("feitoTexto").textContent =
     "Obrigado, " + document.getElementById("nome").value.trim().split(/\s+/)[0] +
-    "! Pagamento aprovado no cartão em " + resp.pagamento.parcelas + "x.";
+    "! Recebemos seu pedido.";
   document.getElementById("feitoResumo").innerHTML =
     '<div class="resumo-corpo" style="display:block;border-top:0;padding-top:4px">' +
     montarResumo(r) + '</div>';
@@ -975,10 +853,21 @@ function mostrarConfirmado(resp){
 var pixTimer = null, pixConsulta = null;
 
 function mostrarPix(resp){
-  document.getElementById("pixPedido").textContent = "#" + resp.pedido.id;
+  document.getElementById("pixPedido").textContent = "#" + resp.pedido.numero;
   document.getElementById("pixValor").textContent = brl(resp.total / 100);
-  document.getElementById("pixQr").src = resp.pix.qrcode;
   document.getElementById("pixEmv").textContent = resp.pix.emv;
+
+  /* O BravoPay manda so o copia-e-cola; o desenho do QR e feito no
+     nosso servidor e vem como SVG. Montamos o data URI aqui para
+     nao trafegar o mesmo conteudo duas vezes em base64. */
+  var img = document.getElementById("pixQr");
+  if (resp.pix.svg){
+    img.src = "data:image/svg+xml;base64," + btoa(resp.pix.svg);
+    img.hidden = false;
+  } else {
+    /* Sem imagem, o copia-e-cola ainda resolve a compra. */
+    img.hidden = true;
+  }
 
   trocarDeTela("telaPix");
 
@@ -987,7 +876,7 @@ function mostrarPix(resp){
   limparCarrinho();
 
   contagemPix(resp.pix.expiraEm);
-  vigiarPagamento(resp.pedido.id);
+  vigiarPagamento(resp.pedido.numero);
 }
 
 /* O prazo vem da API a cada pedido — nunca fixe um tempo aqui. */
@@ -1026,10 +915,16 @@ function vigiarPagamento(pedidoId){
     fetch("/api/status?pedido=" + encodeURIComponent(pedidoId))
       .then(function(r){ return r.json(); })
       .then(function(d){
-        if (d && d.pago){
+        if (!d) return;
+        if (d.pago){
           clearInterval(pixConsulta);
           if (pixTimer) clearInterval(pixTimer);
           pixPago(pedidoId);
+          return;
+        }
+        /* Expirado ou estornado: nao adianta seguir perguntando. */
+        if (d.encerrado){
+          clearInterval(pixConsulta);
         }
       })
       .catch(function(){});
@@ -1046,156 +941,19 @@ function pixPago(pedidoId){
   window.scrollTo({ top: 0, behavior:"smooth" });
 }
 
-/* --- Cartao -------------------------------------------------
-   Estes campos so existem na tela quando o cartao e escolhido.
-   O numero em si nao viaja ate o nosso servidor em producao:
-   o appmax.js troca por um token antes.
+
+
+
+
+
+
+
+
+/* --- Diagnostico na propria pagina ---------------------------
+   Com ?debug=1 na URL, as mensagens do fluxo aparecem numa caixa
+   sobre a pagina, com horario. Sem o parametro nada disso existe
+   para o cliente.
    ------------------------------------------------------------- */
-
-function mascaraCartao(v){
-  v = soNumeros(v).slice(0, 19);
-  return v.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
-}
-
-function mascaraValidade(v){
-  v = soNumeros(v).slice(0, 6);
-  return v.length > 2 ? v.slice(0, 2) + "/" + v.slice(2) : v;
-}
-
-/* Luhn: pega digito trocado e numero inventado antes de gastar
-   uma ida ao servidor. */
-function cartaoValido(num){
-  num = soNumeros(num);
-  if (num.length < 13 || num.length > 19) return false;
-
-  var soma = 0, dobra = false;
-  for (var i = num.length - 1; i >= 0; i--){
-    var d = parseInt(num.charAt(i), 10);
-    if (dobra){ d *= 2; if (d > 9) d -= 9; }
-    soma += d;
-    dobra = !dobra;
-  }
-  return soma % 10 === 0;
-}
-
-function bandeira(num){
-  num = soNumeros(num);
-  if (/^4/.test(num)) return "Visa";
-  if (/^(5[1-5]|2[2-7])/.test(num)) return "Mastercard";
-  if (/^3[47]/.test(num)) return "American Express";
-  if (/^(38|60|6504|6505|6507|6509|6516|6550)/.test(num)) return "Elo / Hipercard";
-  return "";
-}
-
-/* Aceita MM/AA e MM/AAAA; devolve {mes, ano} ou null. */
-function validadeEmPartes(v){
-  var p = soNumeros(v);
-  if (p.length !== 4 && p.length !== 6) return null;
-
-  var mes = parseInt(p.slice(0, 2), 10);
-  if (!(mes >= 1 && mes <= 12)) return null;
-
-  var ano = p.length === 4 ? 2000 + parseInt(p.slice(2), 10) : parseInt(p.slice(2), 10);
-  var agora = new Date();
-  var venceu = ano < agora.getFullYear() ||
-               (ano === agora.getFullYear() && mes < agora.getMonth() + 1);
-  if (venceu) return null;
-
-  return { mes: String(mes).padStart(2, "0"), ano: String(ano) };
-}
-
-function validarCartao(){
-  if (pagEscolhido !== "cartao") return true;
-
-  var ok = true;
-  ok = marcar("c-cartao-num",  cartaoValido(document.getElementById("cartaoNum").value)) && ok;
-  ok = marcar("c-cartao-nome", document.getElementById("cartaoNome").value.trim().split(/\s+/).length >= 2) && ok;
-  ok = marcar("c-cartao-val",  validadeEmPartes(document.getElementById("cartaoVal").value) !== null) && ok;
-  ok = marcar("c-cartao-cvv",  soNumeros(document.getElementById("cartaoCvv").value).length >= 3) && ok;
-  return ok;
-}
-
-function dadosDoCartao(){
-  var val = validadeEmPartes(document.getElementById("cartaoVal").value) || { mes:"", ano:"" };
-  var dados = {
-    parcelas: Number(document.getElementById("cartaoParcelas").value) || 1,
-    titular: document.getElementById("cartaoNome").value.trim()
-  };
-
-  /* Caminho bom: o appmax.js ja tokenizou e so o token viaja. */
-  if (tokenDoCartao){
-    dados.token = tokenDoCartao;
-    return dados;
-  }
-
-  /* Sem token (sem external_id configurado): manda os dados para o
-     servidor tokenizar. O servidor SO aceita isso no sandbox. */
-  dados.numero = soNumeros(document.getElementById("cartaoNum").value);
-  dados.cvv    = soNumeros(document.getElementById("cartaoCvv").value);
-  dados.mes    = val.mes;
-  dados.ano    = val.ano;
-  return dados;
-}
-
-/* As parcelas vem da tabela da Appmax, com os juros ja aplicados.
-   Nunca calcule aqui dividindo o total: o que a pessoa ve na tela
-   tem que ser exatamente o que vai ser cobrado dela. */
-var opcoesParcelas = null;
-
-function montarParcelas(){
-  var sel = document.getElementById("cartaoParcelas");
-  var total = Math.round(resumoPedido().total * 100);
-
-  /* Enquanto a consulta nao volta, so a vista — nunca um numero
-     provisorio que possa mudar depois de escolhido. */
-  sel.innerHTML = '<option value="1">À vista — ' + brl(total / 100) + "</option>";
-
-  fetch("/api/parcelas?total=" + total)
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if (!d || !d.ok || !d.opcoes || !d.opcoes.length) return;
-      opcoesParcelas = d.opcoes;
-      sel.innerHTML = "";
-
-      d.opcoes.forEach(function(o){
-        var op = document.createElement("option");
-        op.value = o.parcelas;
-        op.textContent = o.parcelas === 1
-          ? "À vista — " + brl(o.total / 100)
-          : o.parcelas + "x de " + brl(o.valorParcela / 100) +
-            " — total " + brl(o.total / 100);
-        sel.appendChild(op);
-      });
-
-      atualizarAvisoParcela();
-    })
-    .catch(function(){ /* fica so a vista */ });
-}
-
-/* Deixa claro que parcelar custa mais caro, antes de finalizar. */
-function atualizarAvisoParcela(){
-  var aviso = document.getElementById("parcelaAviso");
-  if (!aviso) return;
-
-  var n = Number(document.getElementById("cartaoParcelas").value) || 1;
-  var o = (opcoesParcelas || []).filter(function(x){ return x.parcelas === n; })[0];
-
-  if (!o || !o.juros){
-    aviso.textContent = "";
-    return;
-  }
-  aviso.textContent = "Parcelando em " + n + "x você paga " +
-    brl(o.juros / 100) + " de juros — total de " + brl(o.total / 100) + ".";
-}
-
-/* --- Appmax JS ----------------------------------------------
-   Obrigatorio: a Appmax so cria cliente com o IP coletado por
-   este script. O external_id vem de /api/config e e o que permite
-   tokenizar o cartao aqui no navegador.
-   ------------------------------------------------------------- */
-var ipDoCliente = null;
-var tokenDoCartao = null;
-var appmaxPronto = false;   /* so fica true com external_id valido */
 
 /* --- Diagnostico na propria pagina ---------------------------
    O appmax.min.js e ofuscado e tem armadilha anti-depuracao: ao
@@ -1230,77 +988,6 @@ function registrar(texto, ruim){
   caixaDebug.scrollTop = caixaDebug.scrollHeight;
 }
 
-function iniciarAppmax(){
-  fetch("/api/config")
-    .then(function(r){ return r.json(); })
-    .then(function(cfg){
-      registrar("1. config recebida — externalId: " + (cfg.externalId || "(VAZIO!)") + " | ambiente: " + cfg.ambiente, !cfg.externalId);
-
-      var s = document.createElement("script");
-      s.src = "https://scripts.appmax.com.br/appmax.min.js";
-      s.onerror = function(){ registrar("2. FALHOU ao baixar o appmax.min.js (bloqueador de anuncio? rede?)", true); ligarSubmit(); };
-      s.onload = function(){
-        registrar("2. appmax.min.js baixado");
-        if (!window.AppmaxScripts){
-          registrar("3. o script carregou mas nao criou window.AppmaxScripts", true);
-          ligarSubmit();
-          return;
-        }
-        try {
-          /* Uma chamada por carregamento de pagina: o init nao e
-             idempotente, cada chamada empilha novos listeners. */
-          appmaxPronto = Boolean(cfg.externalId);
-          registrar("3. chamando init com externalId: " + (cfg.externalId || "(VAZIO)"));
-
-          try {
-            var metodos = [];
-            for (var k in window.AppmaxScripts) metodos.push(k);
-            registrar("3b. metodos do AppmaxScripts: " + (metodos.join(", ") || "(nenhum visivel)"));
-            registrar("3c. form com data-appmax-checkout: " +
-                      (document.querySelector("form[data-appmax-checkout]") ? "encontrado" : "NAO ENCONTRADO") +
-                      " | campos appmax-form-element: " +
-                      document.querySelectorAll("[appmax-form-element]").length);
-          } catch (e){ registrar("3b. falhou ao inspecionar: " + e.message, true); }
-
-          window.AppmaxScripts.init(
-            function(dados){
-              registrar("4. onSuccess — ip: " + ((dados && dados.ip) || "(nenhum)") + " | token: " + ((dados && dados.token) ? "RECEBIDO" : "(sem token)"));
-              if (dados && dados.ip) ipDoCliente = dados.ip;
-              if (!dados || !dados.token) return;
-
-              tokenDoCartao = dados.token;
-
-              /* O submit ficou esperando por isto. */
-              if (aguardandoToken){
-                aguardandoToken = false;
-                clearTimeout(relogioToken);
-                enviarPedido();
-              }
-            },
-            function(erro){
-              registrar("4. onError do appmax.js: " + (erro && (erro.message || erro.toString())), true);
-              if (!aguardandoToken) return;
-              aguardandoToken = false;
-              clearTimeout(relogioToken);
-              ocupado(false);
-              mostrarErro("Não foi possível validar os dados do cartão. Confira o número, a validade e o CVV.");
-            },
-            cfg.externalId || undefined
-          );
-
-          /* Agora sim: o ouvinte do script ja esta registrado, o
-             nosso entra atras dele. */
-          ligarSubmit();
-
-        } catch (e){
-          registrar("3. init lancou excecao: " + e.message, true);
-          ligarSubmit();
-        }
-      };
-      document.head.appendChild(s);
-    })
-    .catch(function(){ registrar("1. /api/config falhou — seguindo sem o appmax.js", true); ligarSubmit(); });
-}
 
 /* --- Inicio ------------------------------------------------- */
 document.addEventListener("DOMContentLoaded", function(){
@@ -1347,33 +1034,6 @@ document.addEventListener("DOMContentLoaded", function(){
     el.addEventListener("blur", salvarDados);
   });
 
-  /* mascaras do cartao */
-  var cNum = document.getElementById("cartaoNum");
-  cNum.addEventListener("input", function(){
-    this.value = mascaraCartao(this.value);
-    document.getElementById("cartaoBandeira").textContent = bandeira(this.value);
-  });
-
-  var cVal = document.getElementById("cartaoVal");
-  cVal.addEventListener("input", function(){
-    this.value = mascaraValidade(this.value);
-    /* o appmax.js le mes e ano destes dois campos escondidos */
-    var p = validadeEmPartes(this.value);
-    document.getElementById("cartaoMes").value = p ? p.mes : "";
-    document.getElementById("cartaoAno").value = p ? p.ano : "";
-  });
-
-  document.getElementById("cartaoCvv").addEventListener("input", function(){
-    this.value = soNumeros(this.value);
-  });
-
-  document.getElementById("cartaoNome").addEventListener("input", function(){
-    this.value = this.value.toUpperCase();
-  });
-
-  montarParcelas();
-  document.getElementById("cartaoParcelas").addEventListener("change", atualizarAvisoParcela);
-
   /* copiar o codigo Pix */
   document.getElementById("pixBtnCopiar").addEventListener("click", function(){
     var codigo = document.getElementById("pixEmv").textContent;
@@ -1403,29 +1063,17 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   });
 
-  iniciarAppmax();
-
-  /* Rede de seguranca: se o appmax.js nao carregar em 6s (bloqueador
-     de anuncio, CDN fora), ligamos o submit mesmo assim. Sem isto a
-     loja ficaria com o botao inerte. */
-  setTimeout(ligarSubmit, 6000);
+  ligarSubmit();
 });
 
-/* O nosso ouvinte de submit entra DEPOIS do appmax.js, nunca antes.
-
-   Ouvintes rodam na ordem em que foram registrados. Com o nosso em
-   primeiro, ele chamava preventDefault e o script da Appmax, ao ver o
-   evento ja cancelado, desistia de tokenizar — era por isso que ele
-   encontrava o formulario e os cinco campos e ainda assim nao fazia
-   nada. Registrando depois, ele tokeniza primeiro e nos cancelamos a
-   navegacao em seguida. */
+/* Um unico ponto de ligacao do submit, para nao registrar duas vezes. */
 var submitLigado = false;
 
 function ligarSubmit(){
   if (submitLigado) return;
   submitLigado = true;
   document.getElementById("form").addEventListener("submit", finalizar);
-  registrar("3d. submit do checkout ligado (depois do appmax.js)");
+  registrar("2. submit do checkout ligado");
 }
 </script>
 

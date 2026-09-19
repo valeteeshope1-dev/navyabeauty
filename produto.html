@@ -887,44 +887,6 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
 var corAtual = COR_PADRAO;
 var qtdAtual = 1;
 
-/* --- Parcelamento na vitrine --------------------------------
-   O valor da parcela sai da tabela da Appmax (/api/parcelas), com
-   os juros ja aplicados — o mesmo numero que o checkout vai cobrar.
-   Dividir o total por 3 aqui daria uma parcela menor que a real, e
-   a pessoa descobriria a diferenca so no fim da compra.
-
-   Enquanto a consulta nao volta, ou se ela falhar, a linha nao fala
-   de parcela: melhor calar do que anunciar um valor errado.
-   ------------------------------------------------------------- */
-var cacheParcelas = {};
-
-function mostrarParcela(totalReais, idElemento, sufixo){
-  var el = document.getElementById(idElemento);
-  if (!el) return;
-
-  var centavos = Math.round(totalReais * 100);
-  el.textContent = sufixo.replace(/^ · /, "");
-
-  function pintar(opcoes){
-    var melhor = null;
-    opcoes.forEach(function(o){ if (!melhor || o.parcelas > melhor.parcelas) melhor = o; });
-    if (!melhor || melhor.parcelas < 2) return;
-    el.textContent = "ou " + melhor.parcelas + "x de " +
-                     brl(melhor.valorParcela / 100) + sufixo;
-  }
-
-  if (cacheParcelas[centavos]){ pintar(cacheParcelas[centavos]); return; }
-
-  fetch("/api/parcelas?total=" + centavos)
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if (!d || !d.ok || !d.opcoes) return;
-      cacheParcelas[centavos] = d.opcoes;
-      pintar(d.opcoes);
-    })
-    .catch(function(){ /* fica so o frete gratis */ });
-}
-
 function trocarFoto(botao, src){
   document.getElementById("fotoPrincipal").src = src;
   document.querySelectorAll(".mini").forEach(function(b){
@@ -972,7 +934,7 @@ function aplicarQtd(valor, corrigir){
   document.getElementById("precoAntigo").textContent   = brl(cheio);
   document.getElementById("badgeDesconto").textContent = off + "% OFF";
   document.getElementById("seloDesconto").textContent  = off + "% OFF";
-  mostrarParcela(total, "parcela", " · Frete grátis");
+  document.getElementById("parcela").textContent = "Frete grátis para todo o Brasil";
   document.getElementById("qtdUnit").textContent       = brl(unit) + " cada";
   document.getElementById("qtdEconomia").textContent   = "Economia de " + brl(economia);
   document.getElementById("stickyPreco").textContent   = brl(total);
@@ -1110,7 +1072,7 @@ function renderCarrinho(){
   document.getElementById("cartSubtotal").textContent = brl(cheio);
   document.getElementById("cartEconomia").textContent = "− " + brl(economia);
   document.getElementById("cartTotal").textContent    = brl(total);
-  mostrarParcela(total, "cartParcela", "");
+  document.getElementById("cartParcela").textContent = "";
   pe.hidden = false;
 }
 
