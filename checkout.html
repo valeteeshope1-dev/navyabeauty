@@ -502,7 +502,7 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
               <rect x="4.6" y="13.6" width="5.6" height="2.1" rx="1.05" fill="#d94fb0"/>
             </svg>
           </span>
-          <span class="txt"><b>Cartão de crédito</b><small id="pagParcela">em até 12x</small></span>
+          <span class="txt"><b>Cartão de crédito</b><small id="pagParcela">em até 3x</small></span>
         </button>
       </div>
 
@@ -546,6 +546,7 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
           <div class="campo largo parcelas">
             <label for="cartaoParcelas">Parcelamento</label>
             <select id="cartaoParcelas"></select>
+            <span class="dica" id="parcelaAviso"></span>
           </div>
         </div>
 
@@ -1099,19 +1100,55 @@ function dadosDoCartao(){
   return dados;
 }
 
+/* As parcelas vem da tabela da Appmax, com os juros ja aplicados.
+   Nunca calcule aqui dividindo o total: o que a pessoa ve na tela
+   tem que ser exatamente o que vai ser cobrado dela. */
+var opcoesParcelas = null;
+
 function montarParcelas(){
   var sel = document.getElementById("cartaoParcelas");
-  var total = resumoPedido().total;
-  sel.innerHTML = "";
+  var total = Math.round(resumoPedido().total * 100);
 
-  for (var n = 1; n <= PARCELAS; n++){
-    var o = document.createElement("option");
-    o.value = n;
-    o.textContent = n === 1
-      ? "À vista — " + brl(total)
-      : n + "x de " + brl(total / n) + " — sem juros";
-    sel.appendChild(o);
+  /* Enquanto a consulta nao volta, so a vista — nunca um numero
+     provisorio que possa mudar depois de escolhido. */
+  sel.innerHTML = '<option value="1">À vista — ' + brl(total / 100) + "</option>";
+
+  fetch("/api/parcelas?total=" + total)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d || !d.ok || !d.opcoes || !d.opcoes.length) return;
+      opcoesParcelas = d.opcoes;
+      sel.innerHTML = "";
+
+      d.opcoes.forEach(function(o){
+        var op = document.createElement("option");
+        op.value = o.parcelas;
+        op.textContent = o.parcelas === 1
+          ? "À vista — " + brl(o.total / 100)
+          : o.parcelas + "x de " + brl(o.valorParcela / 100) +
+            " — total " + brl(o.total / 100);
+        sel.appendChild(op);
+      });
+
+      atualizarAvisoParcela();
+    })
+    .catch(function(){ /* fica so a vista */ });
+}
+
+/* Deixa claro que parcelar custa mais caro, antes de finalizar. */
+function atualizarAvisoParcela(){
+  var aviso = document.getElementById("parcelaAviso");
+  if (!aviso) return;
+
+  var n = Number(document.getElementById("cartaoParcelas").value) || 1;
+  var o = (opcoesParcelas || []).filter(function(x){ return x.parcelas === n; })[0];
+
+  if (!o || !o.juros){
+    aviso.textContent = "";
+    return;
   }
+  aviso.textContent = "Parcelando em " + n + "x você paga " +
+    brl(o.juros / 100) + " de juros — total de " + brl(o.total / 100) + ".";
 }
 
 /* --- Appmax JS ----------------------------------------------
@@ -1218,6 +1255,7 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   montarParcelas();
+  document.getElementById("cartaoParcelas").addEventListener("change", atualizarAvisoParcela);
 
   /* copiar o codigo Pix */
   document.getElementById("pixBtnCopiar").addEventListener("click", function(){

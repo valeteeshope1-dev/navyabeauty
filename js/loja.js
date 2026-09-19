@@ -14,7 +14,7 @@ var PRECO_CHEIO = 58.90;                          /* riscado, por unidade */
 var TOTAIS      = { 1: 37.90, 2: 58.90, 3: 84.90 };
 var UNIT_ACIMA  = 22.95;                          /* a partir de 4 unidades */
 var QTD_MAX     = 99;
-var PARCELAS    = 12;
+var PARCELAS    = 3;    /* teto de parcelas: espelha PARCELAS_MAX em api/_precos.js */
 
 /* --- Cores reais do produto -------------------------------- */
 var CORES_HEX = { "Branco":"#f2f1f3", "Verde":"#ade1d4", "Rosa":"#f8a0aa" };
@@ -22,6 +22,11 @@ var COR_PADRAO = "Branco";
 var FOTO_ITEM = "./img/desc-cores.jpg";
 
 var PRODUTO_NOME = "Escova Mágica Retrátil Premium";
+
+/* Parcelamento COM JUROS: quem manda na conta e a tabela da
+   Appmax, consultada em /api/parcelas. O valor calculado aqui e
+   so um provisorio para a tela nao nascer vazia — assim que a
+   consulta responde, ele e substituido pelo valor real. */
 
 /* --- Calculo ------------------------------------------------ */
 function precoTotal(q){

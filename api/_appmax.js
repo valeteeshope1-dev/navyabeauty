@@ -176,6 +176,55 @@ function consultarPedido(id){
   });
 }
 
+/* Tabela de parcelas COM juros, do jeito que a Appmax cobra desta
+   loja. A Appmax nao aplica juros sozinha: quem monta o pedido com o
+   valor ja ajustado somos nos. Por isso esta consulta e obrigatoria
+   antes de cobrar parcelado — chutar a taxa significa cobrar a mais
+   ou a menos do cliente.
+
+   Atencao ao formato: a documentacao mostra "installments" com totais
+   em centavos, mas a API responde "parcels" com valores em REAIS
+   (58.9, 61.24...). Aceitamos os dois. */
+async function consultarParcelas(totalCentavos, maxParcelas){
+  var resp = await chamar("/v1/payments/installments", {
+    installments: maxParcelas,
+    total_value: totalCentavos,
+    settings: true
+  }, { erroPadrao: "Não foi possível calcular as parcelas." });
+
+  var bruto = resp.parcels || resp.installments || {};
+  var opcoes = [];
+
+  for (var n = 1; n <= maxParcelas; n++){
+    var valor = bruto[n] !== undefined ? bruto[n] : bruto[String(n)];
+    if (valor === undefined || valor === null) continue;
+
+    var total;
+    if (typeof valor === "object"){
+      total = Number(valor.total);              /* formato da documentacao: centavos */
+    } else {
+      total = Math.round(Number(valor) * 100);  /* formato real: reais */
+    }
+    if (!Number.isFinite(total) || total <= 0) continue;
+
+    opcoes.push({
+      parcelas: n,
+      total: total,
+      valorParcela: Math.round(total / n),
+      juros: total - totalCentavos
+    });
+  }
+
+  if (!opcoes.length){
+    throw new ErroAppmax(
+      "Não foi possível calcular as parcelas.", 502,
+      "resposta de parcelas sem valores: " + JSON.stringify(resp).slice(0, 300)
+    );
+  }
+
+  return opcoes;
+}
+
 module.exports = {
   ambiente: ambiente,
   ErroAppmax: ErroAppmax,
@@ -184,5 +233,6 @@ module.exports = {
   pagarPix: pagarPix,
   pagarCartao: pagarCartao,
   tokenizarCartao: tokenizarCartao,
-  consultarPedido: consultarPedido
+  consultarPedido: consultarPedido,
+  consultarParcelas: consultarParcelas
 };

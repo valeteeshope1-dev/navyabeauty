@@ -101,4 +101,58 @@ function conferirPedido(itens){
   };
 }
 
-module.exports = { conferirPedido: conferirPedido, PRODUTO_NOME: PRODUTO_NOME };
+/* Teto de parcelas da loja. Acima de 3x os juros ficam altos demais
+   para o ticket deste produto. Mude aqui e em js/loja.js juntos. */
+var PARCELAS_MAX = 3;
+
+/* Parcelado com juros: a Appmax exige o pedido ja com os juros
+   embutidos, "distribuidos entre os produtos proporcionalmente".
+   Esta funcao refaz as linhas para somarem o total novo, mantendo a
+   proporcao e jogando a sobra de centavos na ultima linha — assim a
+   soma bate exatamente, sem centavo perdido nem sobrando. */
+function aplicarJuros(pedido, totalComJuros){
+  if (!Number.isInteger(totalComJuros) || totalComJuros < pedido.total){
+    throw new Error("Valor com juros inválido.");
+  }
+
+  var baseProdutos = pedido.produtos_valor;
+  var novoProdutos = totalComJuros - pedido.frete;
+  var soma = 0;
+
+  var produtos = pedido.produtos.map(function(p, i, todos){
+    var fatia;
+    if (i === todos.length - 1){
+      fatia = novoProdutos - soma;
+    } else {
+      fatia = Math.round(novoProdutos * (p.unit_value * p.quantity) / baseProdutos);
+      soma += fatia;
+    }
+    return {
+      sku: p.sku,
+      name: p.name,
+      quantity: p.quantity,
+      unit_value: Math.round(fatia / p.quantity),
+      type: p.type,
+      _valor_linha: fatia
+    };
+  });
+
+  var produtosValor = produtos.reduce(function(s, p){ return s + p._valor_linha; }, 0);
+  produtos.forEach(function(p){ delete p._valor_linha; });
+
+  return Object.assign({}, pedido, {
+    produtos: produtos,
+    produtos_valor: produtosValor,
+    total: produtosValor + pedido.frete,
+    total_reais: (produtosValor + pedido.frete) / 100,
+    juros: totalComJuros - pedido.total,
+    total_sem_juros: pedido.total
+  });
+}
+
+module.exports = {
+  conferirPedido: conferirPedido,
+  aplicarJuros: aplicarJuros,
+  PRODUTO_NOME: PRODUTO_NOME,
+  PARCELAS_MAX: PARCELAS_MAX
+};

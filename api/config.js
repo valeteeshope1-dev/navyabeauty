@@ -6,6 +6,7 @@
    ============================================================ */
 
 var appmax = require("./_appmax.js");
+var precos = require("./_precos.js");
 
 module.exports = function handler(req, res){
   res.setHeader("Cache-Control", "no-store");
@@ -23,7 +24,7 @@ module.exports = function handler(req, res){
   return res.status(200).json({
     externalId: process.env.APPMAX_EXTERNAL_ID || "",
     ambiente: appmax.ambiente().nome,
-    parcelasMax: 12,
+    parcelasMax: precos.PARCELAS_MAX,
     configurado: conf
   });
 };

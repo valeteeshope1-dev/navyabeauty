@@ -19,7 +19,7 @@ var appmax   = require("./_appmax.js");
 var precos   = require("./_precos.js");
 var validar  = require("./_validar.js");
 
-var PARCELAS_MAX = 12;
+var PARCELAS_MAX = precos.PARCELAS_MAX;
 
 async function lerCorpo(req){
   if (req.body && typeof req.body === "object") return req.body;
@@ -90,6 +90,26 @@ module.exports = async function handler(req, res){
   }
 
   try {
+    /* --- 1b. Juros do parcelamento --------------------------- *
+       A Appmax nao aplica juros sozinha: o pedido precisa ser
+       criado ja com o valor ajustado. Consultamos a tabela da loja
+       e refazemos as linhas — nunca calculamos a taxa por conta
+       propria, senao o que o cliente ve e o que ele paga divergem. */
+    var juros = 0;
+
+    if (forma === "cartao" && parcelas > 1){
+      var opcoes = await appmax.consultarParcelas(pedido.total, PARCELAS_MAX);
+      var escolhida = opcoes.filter(function(o){ return o.parcelas === parcelas; })[0];
+
+      if (!escolhida) throw new appmax.ErroAppmax(
+        "Esse parcelamento não está disponível.", 400,
+        "parcelas " + parcelas + " fora da tabela: " + JSON.stringify(opcoes)
+      );
+
+      pedido = precos.aplicarJuros(pedido, escolhida.total);
+      juros = pedido.juros;
+    }
+
     /* --- 2. Cliente ------------------------------------------ */
     var respCliente = await appmax.criarCliente({
       first_name: dados.cliente.first_name,
@@ -187,7 +207,9 @@ module.exports = async function handler(req, res){
       pagamento: {
         aprovado: recusados.indexOf(String(status).toLowerCase()) === -1,
         parcelas: parcelas,
-        status: status
+        status: status,
+        juros: juros,
+        valorParcela: Math.round(pedido.total / parcelas)
       }
     });
 
