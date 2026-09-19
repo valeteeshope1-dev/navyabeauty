@@ -555,9 +555,13 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
         </div>
 
         <!-- O appmax.js le mes e ano separados; a pessoa digita MM/AAAA
-             num campo so e estes dois sao preenchidos por tras. -->
-        <input type="hidden" id="cartaoMes" appmax-form-element="expiration_month">
-        <input type="hidden" id="cartaoAno" appmax-form-element="expiration_year">
+             num campo so e estes dois sao preenchidos por tras.
+             Sao campos de texto de verdade, apenas fora da area visivel:
+             input hidden pode ser ignorado por quem varre o formulario. -->
+        <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+          <input type="text" id="cartaoMes" tabindex="-1" autocomplete="off" appmax-form-element="expiration_month">
+          <input type="text" id="cartaoAno" tabindex="-1" autocomplete="off" appmax-form-element="expiration_year">
+        </div>
       </div>
 
       <div class="pag-aviso" id="pagAviso">
@@ -1246,6 +1250,16 @@ function iniciarAppmax(){
              idempotente, cada chamada empilha novos listeners. */
           appmaxPronto = Boolean(cfg.externalId);
           registrar("3. chamando init com externalId: " + (cfg.externalId || "(VAZIO)"));
+
+          try {
+            var metodos = [];
+            for (var k in window.AppmaxScripts) metodos.push(k);
+            registrar("3b. metodos do AppmaxScripts: " + (metodos.join(", ") || "(nenhum visivel)"));
+            registrar("3c. form com data-appmax-checkout: " +
+                      (document.querySelector("form[data-appmax-checkout]") ? "encontrado" : "NAO ENCONTRADO") +
+                      " | campos appmax-form-element: " +
+                      document.querySelectorAll("[appmax-form-element]").length);
+          } catch (e){ registrar("3b. falhou ao inspecionar: " + e.message, true); }
 
           window.AppmaxScripts.init(
             function(dados){
