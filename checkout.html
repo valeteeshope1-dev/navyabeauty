@@ -408,7 +408,11 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
 <!-- checkout -->
 <main class="wrap colunas" id="telaCheckout" hidden>
 
-  <form id="form" novalidate>
+  <!-- data-appmax-checkout: e este atributo que faz o appmax.js
+       trocar o cartao por um token, no proprio navegador, antes de
+       qualquer coisa sair daqui. Sem ele o numero do cartao viajaria
+       ate o nosso servidor — proibido fora do sandbox. -->
+  <form id="form" novalidate data-appmax-checkout>
 
     <div class="bloco">
       <h2><i>1</i>Seus dados</h2>
@@ -834,6 +838,9 @@ function ocupado(sim){
    O navegador manda cor + quantidade, nunca o preco: quem decide
    quanto custa e o servidor, em /api/checkout.
    ------------------------------------------------------------- */
+var aguardandoToken = false;
+var relogioToken = null;
+
 function finalizar(e){
   e.preventDefault();
   salvarDados();
@@ -849,6 +856,28 @@ function finalizar(e){
     return;
   }
 
+  /* No cartao, este mesmo submit acabou de disparar a tokenizacao no
+     appmax.js. Esperamos o token antes de falar com o nosso servidor:
+     o numero do cartao nao pode sair daqui. Quem retoma o envio e o
+     callback de sucesso do script, quando o token chega. */
+  if (pagEscolhido === "cartao" && !tokenDoCartao && appmaxPronto){
+    aguardandoToken = true;
+    ocupado(true);
+
+    relogioToken = setTimeout(function(){
+      if (!aguardandoToken) return;
+      aguardandoToken = false;
+      ocupado(false);
+      mostrarErro("Não foi possível validar o cartão agora. Confira os dados e tente novamente.");
+    }, 15000);
+
+    return;
+  }
+
+  enviarPedido();
+}
+
+function enviarPedido(){
   var corpo = {
     itens: carrinho.map(function(i){ return { cor:i.cor, qtd:i.qtd }; }),
     cliente: {
@@ -884,6 +913,7 @@ function finalizar(e){
   .then(function(r){ return r.json().catch(function(){ return { ok:false }; }); })
   .then(function(resp){
     ocupado(false);
+    tokenDoCartao = null;   /* uso unico: a proxima tentativa gera outro */
 
     if (!resp || !resp.ok){
       mostrarErro((resp && resp.erro) || "Não foi possível concluir o pedido. Tente novamente.");
@@ -903,6 +933,7 @@ function finalizar(e){
   })
   .catch(function(){
     ocupado(false);
+    tokenDoCartao = null;
     mostrarErro("Falha de conexão. Confira sua internet e tente de novo.");
   });
 }
@@ -1158,6 +1189,7 @@ function atualizarAvisoParcela(){
    ------------------------------------------------------------- */
 var ipDoCliente = null;
 var tokenDoCartao = null;
+var appmaxPronto = false;   /* so fica true com external_id valido */
 
 function iniciarAppmax(){
   fetch("/api/config")
@@ -1170,12 +1202,30 @@ function iniciarAppmax(){
         try {
           /* Uma chamada por carregamento de pagina: o init nao e
              idempotente, cada chamada empilha novos listeners. */
+          appmaxPronto = Boolean(cfg.externalId);
+
           window.AppmaxScripts.init(
             function(dados){
               if (dados && dados.ip) ipDoCliente = dados.ip;
-              if (dados && dados.token) tokenDoCartao = dados.token;
+              if (!dados || !dados.token) return;
+
+              tokenDoCartao = dados.token;
+
+              /* O submit ficou esperando por isto. */
+              if (aguardandoToken){
+                aguardandoToken = false;
+                clearTimeout(relogioToken);
+                enviarPedido();
+              }
             },
-            function(erro){ console.warn("appmax:", erro); },
+            function(erro){
+              console.warn("appmax:", erro);
+              if (!aguardandoToken) return;
+              aguardandoToken = false;
+              clearTimeout(relogioToken);
+              ocupado(false);
+              mostrarErro("Não foi possível validar os dados do cartão. Confira o número, a validade e o CVV.");
+            },
             cfg.externalId || undefined
           );
         } catch (e){ console.warn("appmax init:", e); }

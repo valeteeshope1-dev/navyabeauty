@@ -64,11 +64,23 @@ var URLS = sandbox
   : { auth: "https://auth.appmax.com.br", api: "https://api.appmax.com.br",
       autorizar: "https://admin.appmax.com.br/appstore/integration/" };
 
+/* Depois da primeira instalacao, APPMAX_CLIENT_ID passa a guardar a
+   credencial do MERCHANT, e a do APP fica em APPMAX_APP_CLIENT_ID.
+   A instalacao precisa da credencial do APP — usar a do merchant aqui
+   da 401, porque ela nao tem escopo de appstore. */
+function credenciaisDoApp(){
+  if (env.APPMAX_APP_CLIENT_ID && env.APPMAX_APP_CLIENT_SECRET){
+    return { id: env.APPMAX_APP_CLIENT_ID, secret: env.APPMAX_APP_CLIENT_SECRET, origem: "APPMAX_APP_CLIENT_*" };
+  }
+  return { id: env.APPMAX_CLIENT_ID, secret: env.APPMAX_CLIENT_SECRET, origem: "APPMAX_CLIENT_*" };
+}
+
 async function tokenDoApp(){
+  var c = credenciaisDoApp();
   var corpo = new URLSearchParams({
     grant_type: "client_credentials",
-    client_id: env.APPMAX_CLIENT_ID,
-    client_secret: env.APPMAX_CLIENT_SECRET
+    client_id: c.id,
+    client_secret: c.secret
   });
   var r = await fetch(URLS.auth + "/oauth2/token", {
     method: "POST",
@@ -77,7 +89,7 @@ async function tokenDoApp(){
   });
   var d = await r.json().catch(function(){ return {}; });
   if (!r.ok || !d.access_token){
-    throw new Error("autenticacao do app falhou (" + r.status + "): " + JSON.stringify(d).slice(0, 300));
+    throw new Error("autenticacao do app falhou (" + r.status + ") usando " + c.origem + ": " + JSON.stringify(d).slice(0, 300));
   }
   return d.access_token;
 }
@@ -175,11 +187,18 @@ async function gerar(){
     process.exit(1);
   }
 
-  /* As credenciais do APP nao servem para o dia a dia: guardamos
-     separadas e promovemos as do merchant para as chaves que a
-     loja usa. */
-  gravarEnv("APPMAX_APP_CLIENT_ID", env.APPMAX_CLIENT_ID);
-  gravarEnv("APPMAX_APP_CLIENT_SECRET", env.APPMAX_CLIENT_SECRET);
+  /* As credenciais do APP nao servem para o dia a dia: ficam
+     guardadas a parte, e as do merchant assumem as chaves que a
+     loja usa.
+
+     So arquivamos na PRIMEIRA instalacao. Numa reinstalacao,
+     APPMAX_CLIENT_ID ja guarda um merchant antigo — copiar dali
+     apagaria a credencial do app e a proxima instalacao ficaria
+     impossivel. */
+  if (!env.APPMAX_APP_CLIENT_ID || !env.APPMAX_APP_CLIENT_SECRET){
+    gravarEnv("APPMAX_APP_CLIENT_ID", env.APPMAX_CLIENT_ID);
+    gravarEnv("APPMAX_APP_CLIENT_SECRET", env.APPMAX_CLIENT_SECRET);
+  }
   gravarEnv("APPMAX_CLIENT_ID", c.client_id);
   gravarEnv("APPMAX_CLIENT_SECRET", c.client_secret);
 
