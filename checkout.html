@@ -412,7 +412,7 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
        trocar o cartao por um token, no proprio navegador, antes de
        qualquer coisa sair daqui. Sem ele o numero do cartao viajaria
        ate o nosso servidor — proibido fora do sandbox. -->
-  <form id="form" novalidate data-appmax-checkout>
+  <form id="form" method="post" novalidate data-appmax-checkout>
 
     <div class="bloco">
       <h2><i>1</i>Seus dados</h2>
@@ -861,6 +861,7 @@ function finalizar(e){
      o numero do cartao nao pode sair daqui. Quem retoma o envio e o
      callback de sucesso do script, quando o token chega. */
   if (pagEscolhido === "cartao" && !tokenDoCartao && appmaxPronto){
+    console.log("[navya] 5. submit do cartao — esperando o token do appmax.js...");
     aguardandoToken = true;
     ocupado(true);
 
@@ -868,6 +869,7 @@ function finalizar(e){
       if (!aguardandoToken) return;
       aguardandoToken = false;
       ocupado(false);
+      console.error("[navya] 6. TEMPO ESGOTADO: o appmax.js nao devolveu token nem erro em 15s");
       mostrarErro("Não foi possível validar o cartão agora. Confira os dados e tente novamente.");
     }, 15000);
 
@@ -1195,17 +1197,26 @@ function iniciarAppmax(){
   fetch("/api/config")
     .then(function(r){ return r.json(); })
     .then(function(cfg){
+      console.log("[navya] 1. config recebida — externalId:", cfg.externalId || "(VAZIO!)", "| ambiente:", cfg.ambiente);
+
       var s = document.createElement("script");
       s.src = "https://scripts.appmax.com.br/appmax.min.js";
+      s.onerror = function(){ console.error("[navya] 2. FALHOU ao baixar o appmax.min.js (bloqueador de anuncio? rede?)"); };
       s.onload = function(){
-        if (!window.AppmaxScripts) return;
+        console.log("[navya] 2. appmax.min.js baixado");
+        if (!window.AppmaxScripts){
+          console.error("[navya] 3. o script carregou mas nao criou window.AppmaxScripts");
+          return;
+        }
         try {
           /* Uma chamada por carregamento de pagina: o init nao e
              idempotente, cada chamada empilha novos listeners. */
           appmaxPronto = Boolean(cfg.externalId);
+          console.log("[navya] 3. chamando init com externalId:", cfg.externalId || "(VAZIO — tokenizacao nao vai funcionar)");
 
           window.AppmaxScripts.init(
             function(dados){
+              console.log("[navya] 4. onSuccess:", JSON.stringify({ ip: dados && dados.ip, token: dados && dados.token ? "recebido" : "(sem token)" }));
               if (dados && dados.ip) ipDoCliente = dados.ip;
               if (!dados || !dados.token) return;
 
@@ -1219,7 +1230,7 @@ function iniciarAppmax(){
               }
             },
             function(erro){
-              console.warn("appmax:", erro);
+              console.error("[navya] 4. onError do appmax.js:", erro);
               if (!aguardandoToken) return;
               aguardandoToken = false;
               clearTimeout(relogioToken);
@@ -1228,7 +1239,7 @@ function iniciarAppmax(){
             },
             cfg.externalId || undefined
           );
-        } catch (e){ console.warn("appmax init:", e); }
+        } catch (e){ console.error("[navya] 3. init lancou excecao:", e); }
       };
       document.head.appendChild(s);
     })
