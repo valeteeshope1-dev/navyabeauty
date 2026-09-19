@@ -1238,11 +1238,12 @@ function iniciarAppmax(){
 
       var s = document.createElement("script");
       s.src = "https://scripts.appmax.com.br/appmax.min.js";
-      s.onerror = function(){ registrar("2. FALHOU ao baixar o appmax.min.js (bloqueador de anuncio? rede?)", true); };
+      s.onerror = function(){ registrar("2. FALHOU ao baixar o appmax.min.js (bloqueador de anuncio? rede?)", true); ligarSubmit(); };
       s.onload = function(){
         registrar("2. appmax.min.js baixado");
         if (!window.AppmaxScripts){
           registrar("3. o script carregou mas nao criou window.AppmaxScripts", true);
+          ligarSubmit();
           return;
         }
         try {
@@ -1286,11 +1287,19 @@ function iniciarAppmax(){
             },
             cfg.externalId || undefined
           );
-        } catch (e){ registrar("3. init lancou excecao: " + e.message, true); }
+
+          /* Agora sim: o ouvinte do script ja esta registrado, o
+             nosso entra atras dele. */
+          ligarSubmit();
+
+        } catch (e){
+          registrar("3. init lancou excecao: " + e.message, true);
+          ligarSubmit();
+        }
       };
       document.head.appendChild(s);
     })
-    .catch(function(){ /* sem config, o servidor usa o IP da conexao */ });
+    .catch(function(){ registrar("1. /api/config falhou — seguindo sem o appmax.js", true); ligarSubmit(); });
 }
 
 /* --- Inicio ------------------------------------------------- */
@@ -1396,8 +1405,28 @@ document.addEventListener("DOMContentLoaded", function(){
 
   iniciarAppmax();
 
-  document.getElementById("form").addEventListener("submit", finalizar);
+  /* Rede de seguranca: se o appmax.js nao carregar em 6s (bloqueador
+     de anuncio, CDN fora), ligamos o submit mesmo assim. Sem isto a
+     loja ficaria com o botao inerte. */
+  setTimeout(ligarSubmit, 6000);
 });
+
+/* O nosso ouvinte de submit entra DEPOIS do appmax.js, nunca antes.
+
+   Ouvintes rodam na ordem em que foram registrados. Com o nosso em
+   primeiro, ele chamava preventDefault e o script da Appmax, ao ver o
+   evento ja cancelado, desistia de tokenizar — era por isso que ele
+   encontrava o formulario e os cinco campos e ainda assim nao fazia
+   nada. Registrando depois, ele tokeniza primeiro e nos cancelamos a
+   navegacao em seguida. */
+var submitLigado = false;
+
+function ligarSubmit(){
+  if (submitLigado) return;
+  submitLigado = true;
+  document.getElementById("form").addEventListener("submit", finalizar);
+  registrar("3d. submit do checkout ligado (depois do appmax.js)");
+}
 </script>
 
 </body>
