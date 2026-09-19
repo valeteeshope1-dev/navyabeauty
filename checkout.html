@@ -861,7 +861,7 @@ function finalizar(e){
      o numero do cartao nao pode sair daqui. Quem retoma o envio e o
      callback de sucesso do script, quando o token chega. */
   if (pagEscolhido === "cartao" && !tokenDoCartao && appmaxPronto){
-    console.log("[navya] 5. submit do cartao — esperando o token do appmax.js...");
+    registrar("5. submit do cartao — esperando o token...");
     aguardandoToken = true;
     ocupado(true);
 
@@ -869,7 +869,7 @@ function finalizar(e){
       if (!aguardandoToken) return;
       aguardandoToken = false;
       ocupado(false);
-      console.error("[navya] 6. TEMPO ESGOTADO: o appmax.js nao devolveu token nem erro em 15s");
+      registrar("6. TEMPO ESGOTADO: nenhum token e nenhum erro em 15s", true);
       mostrarErro("Não foi possível validar o cartão agora. Confira os dados e tente novamente.");
     }, 15000);
 
@@ -1193,30 +1193,63 @@ var ipDoCliente = null;
 var tokenDoCartao = null;
 var appmaxPronto = false;   /* so fica true com external_id valido */
 
+/* --- Diagnostico na propria pagina ---------------------------
+   O appmax.min.js e ofuscado e tem armadilha anti-depuracao: ao
+   detectar o DevTools aberto, dispara "debugger" em laco e congela
+   a pagina. Entao nao da para acompanhar o fluxo pelo console.
+
+   Com ?debug=1 na URL, as mesmas mensagens aparecem numa caixa
+   sobre a pagina. Sem o parametro, nada disso existe para o
+   cliente — nenhum peso, nenhum vazamento.
+   ------------------------------------------------------------- */
+var DEBUG = location.search.indexOf("debug=1") > -1;
+var caixaDebug = null;
+
+function registrar(texto, ruim){
+  if (window.console) console[ruim ? "error" : "log"]("[navya] " + texto);
+  if (!DEBUG) return;
+
+  if (!caixaDebug){
+    caixaDebug = document.createElement("div");
+    caixaDebug.style.cssText =
+      "position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;max-height:45vh;" +
+      "overflow:auto;background:#12100f;color:#d7ffd7;font:12px ui-monospace,Consolas,monospace;" +
+      "padding:10px 12px;border-radius:10px;line-height:1.5;white-space:pre-wrap;" +
+      "box-shadow:0 8px 30px rgba(0,0,0,.45)";
+    document.body.appendChild(caixaDebug);
+  }
+
+  var linha = document.createElement("div");
+  linha.textContent = new Date().toLocaleTimeString() + "  " + texto;
+  if (ruim) linha.style.color = "#ff9d9d";
+  caixaDebug.appendChild(linha);
+  caixaDebug.scrollTop = caixaDebug.scrollHeight;
+}
+
 function iniciarAppmax(){
   fetch("/api/config")
     .then(function(r){ return r.json(); })
     .then(function(cfg){
-      console.log("[navya] 1. config recebida — externalId:", cfg.externalId || "(VAZIO!)", "| ambiente:", cfg.ambiente);
+      registrar("1. config recebida — externalId: " + (cfg.externalId || "(VAZIO!)") + " | ambiente: " + cfg.ambiente, !cfg.externalId);
 
       var s = document.createElement("script");
       s.src = "https://scripts.appmax.com.br/appmax.min.js";
-      s.onerror = function(){ console.error("[navya] 2. FALHOU ao baixar o appmax.min.js (bloqueador de anuncio? rede?)"); };
+      s.onerror = function(){ registrar("2. FALHOU ao baixar o appmax.min.js (bloqueador de anuncio? rede?)", true); };
       s.onload = function(){
-        console.log("[navya] 2. appmax.min.js baixado");
+        registrar("2. appmax.min.js baixado");
         if (!window.AppmaxScripts){
-          console.error("[navya] 3. o script carregou mas nao criou window.AppmaxScripts");
+          registrar("3. o script carregou mas nao criou window.AppmaxScripts", true);
           return;
         }
         try {
           /* Uma chamada por carregamento de pagina: o init nao e
              idempotente, cada chamada empilha novos listeners. */
           appmaxPronto = Boolean(cfg.externalId);
-          console.log("[navya] 3. chamando init com externalId:", cfg.externalId || "(VAZIO — tokenizacao nao vai funcionar)");
+          registrar("3. chamando init com externalId: " + (cfg.externalId || "(VAZIO)"));
 
           window.AppmaxScripts.init(
             function(dados){
-              console.log("[navya] 4. onSuccess:", JSON.stringify({ ip: dados && dados.ip, token: dados && dados.token ? "recebido" : "(sem token)" }));
+              registrar("4. onSuccess — ip: " + ((dados && dados.ip) || "(nenhum)") + " | token: " + ((dados && dados.token) ? "RECEBIDO" : "(sem token)"));
               if (dados && dados.ip) ipDoCliente = dados.ip;
               if (!dados || !dados.token) return;
 
@@ -1230,7 +1263,7 @@ function iniciarAppmax(){
               }
             },
             function(erro){
-              console.error("[navya] 4. onError do appmax.js:", erro);
+              registrar("4. onError do appmax.js: " + (erro && (erro.message || erro.toString())), true);
               if (!aguardandoToken) return;
               aguardandoToken = false;
               clearTimeout(relogioToken);
@@ -1239,7 +1272,7 @@ function iniciarAppmax(){
             },
             cfg.externalId || undefined
           );
-        } catch (e){ console.error("[navya] 3. init lancou excecao:", e); }
+        } catch (e){ registrar("3. init lancou excecao: " + e.message, true); }
       };
       document.head.appendChild(s);
     })
