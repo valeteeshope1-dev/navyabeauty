@@ -10,12 +10,20 @@
    "URL de validacao":
        https://navyabeauty.com/api/appmax-validar
 
-   Sobre o external_id: a Appmax exige um UUID NOVO a cada health
-   check — repetido ela descarta. Como a loja e uma so e nao temos
-   banco, geramos na hora e gravamos no log. Depois do health check
-   voce copia o UUID do log do Vercel para a variavel
-   APPMAX_EXTERNAL_ID, que e o valor que o appmax.js usa no
-   navegador para tokenizar cartao.
+   Sobre o external_id: a Appmax exige um UUID novo a cada
+   instalacao e guarda o que devolvermos aqui. Esse mesmo valor e
+   exigido depois pelo appmax.js no navegador, para tokenizar
+   cartao — ou seja, precisamos saber qual foi.
+
+   A primeira versao sorteava o UUID e gravava no log. Nao funciona:
+   no plano Hobby da Vercel o log de runtime vive cerca de uma hora,
+   e o valor se perde junto. Entao invertemos — voce define
+   APPMAX_EXTERNAL_ID ANTES de instalar, e o health check devolve
+   exatamente esse valor. O UUID ja esta guardado onde precisa estar.
+
+   Sem a variavel definida, sorteamos (e a instalacao funciona, mas
+   o valor se perde). Antes de CADA nova instalacao, gere um UUID
+   novo: a Appmax rejeita valor repetido.
    ============================================================ */
 
 var crypto = require("crypto");
@@ -58,7 +66,16 @@ module.exports = async function handler(req, res){
   var corpo = {};
   try { corpo = await lerCorpo(req); } catch (e) { corpo = {}; }
 
-  var externalId = crypto.randomUUID();
+  /* O valor combinado vence o sorteio: e o unico que continua
+     conhecido depois que o log expirar. */
+  var combinado = String(process.env.APPMAX_EXTERNAL_ID || "").trim();
+  var valido = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(combinado);
+
+  if (combinado && !valido){
+    console.error("[appmax-validar] APPMAX_EXTERNAL_ID nao e um UUID valido; sorteando um novo");
+  }
+
+  var externalId = valido ? combinado : crypto.randomUUID();
 
   /* Este handler SEMPRE responde 200 com um UUID novo, venha o que
      vier no corpo. Recusar a chamada — por falta de app_id, por
@@ -69,7 +86,8 @@ module.exports = async function handler(req, res){
   console.log("[appmax-validar] metodo: " + req.method);
   console.log("[appmax-validar] content-type: " + (req.headers["content-type"] || "(nenhum)"));
   console.log("[appmax-validar] corpo: " + JSON.stringify(corpo).slice(0, 600));
-  console.log("[appmax-validar] EXTERNAL_ID GERADO: " + externalId);
+  console.log("[appmax-validar] EXTERNAL_ID DEVOLVIDO: " + externalId +
+              (valido ? "  (vindo de APPMAX_EXTERNAL_ID)" : "  (sorteado — o log expira, guarde agora!)"));
   /* O payload pode trazer as credenciais do merchant. NAO registramos
      o valor: log nao e lugar de segredo, e essas credenciais nao
      expiram. Registramos so que vieram. */
