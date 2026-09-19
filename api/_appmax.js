@@ -107,53 +107,128 @@ function mensagemDoErro(dados, padrao){
   return padrao;
 }
 
+/* Erros que uma segunda tentativa pode resolver:
+   - 502/503/504: o servidor deles caiu ou demorou (o caso do Pix).
+   - 429: passamos do limite de chamadas; esperar e a resposta certa.
+
+   NAO repetimos 4xx: cartao recusado, CPF invalido e pedido
+   inexistente vao dar o mesmo erro na segunda tentativa, e insistir
+   so faz o cliente esperar mais para ver a mesma recusa.
+
+   Isto diz apenas que o ERRO e passageiro. Se a CHAMADA pode ser
+   repetida sem risco e outra pergunta, respondida por `repetivel`
+   em cada uma — um 504 numa cobranca pode significar que ela
+   passou e a resposta se perdeu. */
+function valeRepetir(status){
+  return status === 429 || (status >= 500 && status <= 599);
+}
+
+function esperar(ms){
+  return new Promise(function(ok){ setTimeout(ok, ms); });
+}
+
+var TENTATIVAS = 3;
+var ESPERA_BASE = 400;   /* 400ms, 800ms — cabe no tempo de uma pessoa esperando */
+
 async function chamar(caminho, corpo, opcoes){
   opcoes = opcoes || {};
-  var t = await token();
+  var metodo = opcoes.metodo || "POST";
+  var ultimoErro = null;
 
-  var r = await fetch(ambiente().api + caminho, {
-    method: opcoes.metodo || "POST",
-    headers: {
-      "Authorization": "Bearer " + t,
-      "Accept": "application/json",
-      "Content-Type": "application/json"
-    },
-    body: corpo ? JSON.stringify(corpo) : undefined
-  });
+  for (var tentativa = 1; tentativa <= TENTATIVAS; tentativa++){
+    var t = await token();
+    var r, dados, erroRede = null;
 
-  var dados = await lerJSON(r);
+    try {
+      r = await fetch(ambiente().api + caminho, {
+        method: metodo,
+        headers: {
+          "Authorization": "Bearer " + t,
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: corpo ? JSON.stringify(corpo) : undefined
+      });
+      dados = await lerJSON(r);
+    } catch (e) {
+      erroRede = e;
+    }
 
-  if (!r.ok){
-    throw new ErroAppmax(
-      mensagemDoErro(dados, opcoes.erroPadrao || "Não foi possível concluir o pagamento."),
-      r.status,
-      caminho + " -> " + r.status + " " + JSON.stringify(dados).slice(0, 600)
+    if (!erroRede && r.ok) return dados.data || dados;
+
+    var status = erroRede ? 0 : r.status;
+
+    /* Token recusado: pode ter expirado entre o cache e a chamada.
+       Descartamos e pedimos outro na proxima volta. */
+    if (status === 401){
+      tokenCache = { valor: null, expiraEm: 0 };
+    }
+
+    ultimoErro = new ErroAppmax(
+      erroRede
+        ? (opcoes.erroPadrao || "Não foi possível concluir o pagamento.")
+        : mensagemDoErro(dados, opcoes.erroPadrao || "Não foi possível concluir o pagamento."),
+      status || 502,
+      caminho + " -> " + (erroRede ? "falha de rede: " + erroRede.message
+                                   : status + " " + JSON.stringify(dados).slice(0, 600))
     );
+
+    /* Repetir so quando a chamada é segura de repetir. Um 504 quer
+       dizer "o servidor nao respondeu a tempo", NAO "o servidor nao
+       processou" — repetir uma cobranca nessa situacao pode debitar
+       o cliente duas vezes. Por isso cada chamada diz se aceita ser
+       repetida, e o cartao nao aceita.
+
+       O 401 é exceção: token recusado significa que a requisicao
+       nao passou da porta, entao repetir com token novo e seguro
+       mesmo numa cobranca. */
+    var insistir = (status === 401 && tentativa === 1) ||
+                   (opcoes.repetivel && (erroRede || valeRepetir(status)));
+    if (!insistir || tentativa === TENTATIVAS) break;
+
+    var espera = ESPERA_BASE * Math.pow(2, tentativa - 1);
+    console.warn("[appmax] " + caminho + " falhou (" + (status || "rede") +
+                 "), tentativa " + tentativa + "/" + TENTATIVAS +
+                 " — repetindo em " + espera + "ms");
+    await esperar(espera);
   }
 
-  return dados.data || dados;
+  throw ultimoErro;
 }
 
 /* --- Chamadas do fluxo -------------------------------------- */
 
 function criarCliente(cliente){
+  /* Seguro repetir: a Appmax identifica o cliente pela combinacao
+     nome + email + telefone + ip e atualiza em vez de duplicar. */
   return chamar("/v1/customers", cliente, {
+    repetivel: true,
     erroPadrao: "Não foi possível registrar seus dados. Confira nome, e-mail e telefone."
   });
 }
 
 function criarPedido(pedido){
+  /* No pior caso sobra um pedido pendente duplicado no painel — que
+     nao cobra ninguem e expira. Perder a venda seria pior. */
   return chamar("/v1/orders", pedido, {
+    repetivel: true,
     erroPadrao: "Não foi possível criar seu pedido."
   });
 }
 
+/* Repetir e seguro: gera as instrucoes de um pedido que ja existe,
+   nao movimenta dinheiro. Era exatamente o caso do 504 do dia 18. */
 function pagarPix(corpo){
   return chamar("/v1/payments/pix", corpo, {
+    repetivel: true,
     erroPadrao: "Não foi possível gerar o Pix. Tente novamente."
   });
 }
 
+/* SEM repeticao, de proposito. Um timeout aqui pode significar que
+   a cobranca passou e a resposta se perdeu; repetir debitaria o
+   cliente duas vezes. Falhar e pedir para tentar de novo, com a
+   pessoa decidindo, e o comportamento correto. */
 function pagarCartao(corpo){
   return chamar("/v1/payments/credit-card", corpo, {
     erroPadrao: "Não foi possível processar o cartão. Confira os dados ou tente outro cartão."
@@ -172,6 +247,7 @@ function tokenizarCartao(cartao){
 function consultarPedido(id){
   return chamar("/v1/orders/" + encodeURIComponent(id), null, {
     metodo: "GET",
+    repetivel: true,
     erroPadrao: "Não foi possível consultar o pedido."
   });
 }
@@ -190,7 +266,7 @@ async function consultarParcelas(totalCentavos, maxParcelas){
     installments: maxParcelas,
     total_value: totalCentavos,
     settings: true
-  }, { erroPadrao: "Não foi possível calcular as parcelas." });
+  }, { repetivel: true, erroPadrao: "Não foi possível calcular as parcelas." });
 
   var bruto = resp.parcels || resp.installments || {};
   var opcoes = [];
