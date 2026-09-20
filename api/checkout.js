@@ -40,6 +40,39 @@ function novoNumero(){
   return "NV" + tempo + acaso;
 }
 
+/* Tudo o que precisa sobreviver ate o webhook viaja aqui.
+
+   Endereco, porque o BravoPay e gateway de cobranca e nao guarda
+   para onde enviar. E os dados do Meta, porque quando o pagamento
+   confirma — horas depois, num outro processo — nao existe mais
+   navegador para perguntar de qual anuncio veio a venda.
+
+   O limite deles e 20 chaves; usamos 12. Valores curtos, porque
+   metadata nao e lugar de texto longo. */
+function montarMetadata(dados, pedido, meta){
+  meta = meta || {};
+
+  var m = {
+    cep: dados.endereco.postcode,
+    rua: dados.endereco.street,
+    numero: dados.endereco.number,
+    complemento: dados.endereco.complement || "",
+    bairro: dados.endereco.district,
+    cidade: dados.endereco.city,
+    uf: dados.endereco.state,
+    itens: pedido.produtos.map(function(p){
+      return p.quantity + "x " + p.name;
+    }).join(" | ").slice(0, 200)
+  };
+
+  if (meta.eventId) m.meta_event_id = String(meta.eventId).slice(0, 80);
+  if (meta.fbp)     m.meta_fbp = String(meta.fbp).slice(0, 120);
+  if (meta.fbc)     m.meta_fbc = String(meta.fbc).slice(0, 200);
+  if (meta.url)     m.meta_url = String(meta.url).slice(0, 200);
+
+  return m;
+}
+
 module.exports = async function handler(req, res){
   if (req.method !== "POST"){
     res.setHeader("Allow", "POST");
@@ -77,18 +110,7 @@ module.exports = async function handler(req, res){
          endereco junto da transacao, a venda chega sem saber para
          onde enviar. A documentacao garante que metadata volta
          intacta no webhook e na consulta. */
-      metadata: {
-        cep: dados.endereco.postcode,
-        rua: dados.endereco.street,
-        numero: dados.endereco.number,
-        complemento: dados.endereco.complement,
-        bairro: dados.endereco.district,
-        cidade: dados.endereco.city,
-        uf: dados.endereco.state,
-        itens: pedido.produtos.map(function(p){
-          return p.quantity + "x " + p.name;
-        }).join(" | ")
-      }
+      metadata: montarMetadata(dados, pedido, corpo.meta)
     });
 
     var emv = tx && tx.pix && tx.pix.copy_paste;

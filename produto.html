@@ -882,6 +882,7 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
 </div>
 
 <!-- precos, cores e sacola ficam em um arquivo so, compartilhado com o checkout -->
+<script src="./js/pixel.js"></script>
 <script src="./js/loja.js"></script>
 <script>
 var corAtual = COR_PADRAO;
@@ -966,6 +967,12 @@ function adicionarAoCarrinho(){
   salvarCarrinho();
   renderCarrinho();
   abrirCarrinho();
+
+  /* O valor enviado e o do item que acabou de entrar, nao o da
+     sacola inteira: AddToCart repetido somaria errado no relatorio. */
+  if (typeof pixelAdicionarCarrinho === "function"){
+    pixelAdicionarCarrinho(PRODUTO_NOME, precoTotal(qtdAtual), qtdAtual);
+  }
 }
 
 function mudarItem(indice, passo){
@@ -1090,6 +1097,11 @@ function fecharCarrinho(){
 
 function irParaPagamento(){
   if (totalUnidades() === 0) return;
+
+  if (typeof pixelIniciarCheckout === "function"){
+    pixelIniciarCheckout(resumoPedido().total, totalUnidades());
+  }
+
   /* a sacola ja esta salva no navegador; o checkout le de la */
   window.location.href = "/checkout";
 }
@@ -1311,6 +1323,12 @@ document.addEventListener("DOMContentLoaded", function(){
   carregarCarrinho();
   renderCarrinho();
   renderAvaliacoes();
+
+  /* ViewContent: quem abriu a pagina do produto. E deste publico
+     que o Meta monta o remarketing. */
+  if (typeof pixelVerProduto === "function"){
+    pixelVerProduto(PRODUTO_NOME, precoTotal(1));
+  }
 });
 </script>
 

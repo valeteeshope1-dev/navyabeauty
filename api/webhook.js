@@ -19,6 +19,7 @@
    ============================================================ */
 
 var bravo = require("./_bravopay.js");
+var meta  = require("./_meta.js");
 
 /* O corpo tem que ser lido CRU, byte a byte: a assinatura e
    calculada sobre a string exata que eles enviaram. Um JSON.parse
@@ -133,6 +134,35 @@ module.exports = async function handler(req, res){
       pago_em: tx.paid_at,
       entrega: tx.metadata || null
     }));
+
+    /* --- Compra para o Meta ------------------------------------
+       So em pagamento confirmado. Sai daqui, do servidor, e nao do
+       navegador: aqui nao tem bloqueador de anuncio, nao tem aba
+       fechada, nao tem restricao de iPhone. E este e o evento com
+       que o Meta aprende a quem mostrar o anuncio.
+
+       Se falhar, falhou o rastreamento — nao a venda. Por isso o
+       enviarCompra nunca lanca. */
+    if (tipo === "transaction.paid" && meta.configurado()){
+      var m = tx.metadata || {};
+      var c = tx.customer || {};
+
+      await meta.enviarCompra({
+        pedido: tx.external_reference,
+        centavos: tx.amount_cents,
+        quando: tx.paid_at,
+        email: c.email,
+        telefone: c.phone,
+        nome: c.name,
+        cidade: m.cidade,
+        uf: m.uf,
+        cep: m.cep,
+        eventId: m.meta_event_id,
+        fbp: m.meta_fbp,
+        fbc: m.meta_fbc,
+        url: m.meta_url
+      });
+    }
 
   } catch (e) {
     console.error("[webhook] falha ao processar:", e.message);

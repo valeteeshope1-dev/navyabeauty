@@ -534,6 +534,7 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
   <button type="button" class="cta" onclick="document.getElementById('form').requestSubmit()">FINALIZAR →</button>
 </div>
 
+<script src="./js/pixel.js"></script>
 <script src="./js/loja.js"></script>
 <script>
 /* ============================================================
@@ -776,7 +777,19 @@ function finalizar(e){
   enviarPedido();
 }
 
+/* O mesmo id vai para o navegador e para o servidor. E o que faz o
+   Meta entender que sao o mesmo evento e nao contar a compra duas
+   vezes — custo por compra dobrado leva a decisao errada de verba. */
+var eventoCompra = null;
+
+function lerCookie(nome){
+  var m = document.cookie.match(new RegExp("(^| )" + nome + "=([^;]+)"));
+  return m ? decodeURIComponent(m[2]) : "";
+}
+
 function enviarPedido(){
+  eventoCompra = (typeof novoEventId === "function") ? novoEventId() : null;
+
   var corpo = {
     itens: carrinho.map(function(i){ return { cor:i.cor, qtd:i.qtd }; }),
     cliente: {
@@ -795,7 +808,18 @@ function enviarPedido(){
       uf:     document.getElementById("uf").value
     },
     pagamento: pagEscolhido,
-    ip: null
+    ip: null,
+
+    /* Para o Meta juntar esta compra ao anuncio que a gerou.
+       _fbp identifica o navegador; _fbc guarda o clique no anuncio.
+       Sem eles, a compra chega ao Meta sem dono e a otimizacao da
+       campanha piora. */
+    meta: {
+      eventId: eventoCompra,
+      fbp: lerCookie("_fbp"),
+      fbc: lerCookie("_fbc"),
+      url: location.href.split("?")[0]
+    }
   };
 
   ocupado(true);
@@ -874,6 +898,12 @@ function mostrarPix(resp){
   /* A sacola so e esvaziada aqui: se o Pix falhar antes disso, a
      pessoa volta e tenta de novo sem perder o que escolheu. */
   limparCarrinho();
+
+  /* Intencao firme de compra: o Pix foi gerado. A COMPRA em si e
+     enviada pelo servidor, quando o pagamento confirma. */
+  if (typeof pixelPixGerado === "function"){
+    pixelPixGerado(resp.total / 100, eventoCompra);
+  }
 
   contagemPix(resp.pix.expiraEm);
   vigiarPagamento(resp.pedido.numero);
