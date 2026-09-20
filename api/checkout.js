@@ -73,6 +73,26 @@ function montarMetadata(dados, pedido, meta){
   return m;
 }
 
+/* Os UTMs vem do navegador, entao nao sao confiaveis: alguem pode
+   chamar a rota direto com o que quiser. Nao da para "validar" a
+   origem de uma visita, mas da para limitar o estrago — so os
+   campos conhecidos, texto curto, sem objeto aninhado. */
+var CAMPOS_UTM = ["source", "medium", "campaign", "content", "term", "fbclid", "ttclid", "gclid"];
+
+function limparUtm(bruto){
+  if (!bruto || typeof bruto !== "object") return null;
+
+  var limpo = {};
+  CAMPOS_UTM.forEach(function(campo){
+    var v = bruto[campo];
+    if (typeof v === "string" && v.trim()){
+      limpo[campo] = v.trim().slice(0, 200);
+    }
+  });
+
+  return Object.keys(limpo).length ? limpo : null;
+}
+
 module.exports = async function handler(req, res){
   if (req.method !== "POST"){
     res.setHeader("Allow", "POST");
@@ -110,7 +130,11 @@ module.exports = async function handler(req, res){
          endereco junto da transacao, a venda chega sem saber para
          onde enviar. A documentacao garante que metadata volta
          intacta no webhook e na consulta. */
-      metadata: montarMetadata(dados, pedido, corpo.meta)
+      metadata: montarMetadata(dados, pedido, corpo.meta),
+
+      /* O que a UTMify precisa para atribuir a venda ao anuncio. */
+      utm: limparUtm(corpo.utm),
+      produtoId: process.env.BRAVOPAY_PRODUCT_ID || null
     });
 
     var emv = tx && tx.pix && tx.pix.copy_paste;

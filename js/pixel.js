@@ -97,3 +97,73 @@ function pixelPixGerado(valor, eventId){
     currency: "BRL"
   }, { eventID: eventId });
 }
+
+/* ============================================================
+   UTMs — de onde veio a visita
+
+   O checkout hospedado do BravoPay captura os UTMs da URL sozinho.
+   O nosso nao: a documentacao deles e explicita — na API, quem
+   manda os UTMs em cada cobranca somos nos, e "sem isso a venda
+   aparece na UTMify SEM origem".
+
+   O problema pratico: a pessoa chega pelo anuncio em
+   navyabeauty.com/?utm_source=fb&utm_campaign=..., navega ate o
+   produto, vai para o checkout — e la a URL nao tem mais UTM
+   nenhum. Por isso guardamos no navegador assim que ela chega.
+
+   Guardamos por 30 dias: alguem que clicou no anuncio hoje e
+   comprou depois de pensar uma semana veio daquele anuncio, e a
+   campanha merece o credito.
+   ============================================================ */
+
+var CHAVE_UTM = "navya_utm";
+var UTM_DIAS = 30;
+
+var CAMPOS_UTM = [
+  "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
+  "fbclid", "ttclid", "gclid"
+];
+
+function capturarUtm(){
+  var url = new URLSearchParams(location.search);
+  var achou = {};
+  var temAlgum = false;
+
+  CAMPOS_UTM.forEach(function(campo){
+    var v = url.get(campo);
+    if (v){ achou[campo] = v; temAlgum = true; }
+  });
+
+  /* Sem UTM na URL, nao apaga o que ja estava guardado: a pessoa
+     pode estar navegando entre as paginas da loja. */
+  if (!temAlgum) return;
+
+  achou._quando = Date.now();
+
+  try { localStorage.setItem(CHAVE_UTM, JSON.stringify(achou)); } catch (e) {}
+}
+
+/* Devolve no formato que o BravoPay espera: sem o prefixo utm_ nos
+   cinco primeiros, e os ids de clique com o nome cheio. */
+function lerUtm(){
+  var bruto = null;
+  try { bruto = JSON.parse(localStorage.getItem(CHAVE_UTM) || "null"); } catch (e) {}
+  if (!bruto) return null;
+
+  var idade = Date.now() - (bruto._quando || 0);
+  if (idade > UTM_DIAS * 24 * 60 * 60 * 1000) return null;
+
+  var saida = {};
+  if (bruto.utm_source)   saida.source   = bruto.utm_source;
+  if (bruto.utm_medium)   saida.medium   = bruto.utm_medium;
+  if (bruto.utm_campaign) saida.campaign = bruto.utm_campaign;
+  if (bruto.utm_content)  saida.content  = bruto.utm_content;
+  if (bruto.utm_term)     saida.term     = bruto.utm_term;
+  if (bruto.fbclid)       saida.fbclid   = bruto.fbclid;
+  if (bruto.ttclid)       saida.ttclid   = bruto.ttclid;
+  if (bruto.gclid)        saida.gclid    = bruto.gclid;
+
+  return Object.keys(saida).length ? saida : null;
+}
+
+capturarUtm();

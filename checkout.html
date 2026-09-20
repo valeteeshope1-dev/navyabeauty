@@ -822,7 +822,11 @@ function enviarPedido(){
       fbp: lerCookie("_fbp"),
       fbc: lerCookie("_fbc"),
       url: location.href.split("?")[0]
-    }
+    },
+
+    /* De qual anuncio veio esta venda. Sem isto a UTMify recebe a
+       compra sem origem e voce nao sabe qual campanha pagou por ela. */
+    utm: (typeof lerUtm === "function") ? lerUtm() : null
   };
 
   ocupado(true);

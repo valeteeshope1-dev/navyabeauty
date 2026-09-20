@@ -141,6 +141,13 @@ function criarPix(dados){
   if (dados.metadata) corpo.metadata = dados.metadata;
   if (dados.utm) corpo.utm = dados.utm;
 
+  /* Sem product_id a cobranca e acoplada a um produto interno
+     (ghost) do BravoPay. A documentacao deles avisa o que isso
+     causa na UTMify: o nome do produto vira "API Charge", e se
+     houver filtro por produto na UTMify a venda e descartada —
+     some do relatorio sem aviso. */
+  if (dados.produtoId) corpo.product_id = dados.produtoId;
+
   return chamar("/transactions", {
     metodo: "POST",
     corpo: corpo,
