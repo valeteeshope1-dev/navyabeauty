@@ -15,6 +15,8 @@ module.exports = function handler(req, res){
 
   var chave = process.env.BRAVOPAY_API_KEY || "";
   var segredo = process.env.BRAVOPAY_WEBHOOK_SECRET || "";
+  var token = process.env.META_CAPI_TOKEN || "";
+  var dataset = process.env.META_DATASET_ID || "";
 
   return res.status(200).json({
     ok: true,
@@ -31,10 +33,21 @@ module.exports = function handler(req, res){
         prefixo: segredo.slice(0, 6)
       }
     },
-    /* Ajuda a descobrir nome errado: lista os nomes de variaveis que
-       comecam com BRAVO, sem nenhum valor. */
+    meta: {
+      dataset: dataset,
+      token: {
+        presente: Boolean(token),
+        tamanho: token.length,
+        prefixo: token.slice(0, 6)
+      }
+    },
+
+    /* Ajuda a descobrir nome errado: lista os nomes das variaveis da
+       loja, sem nenhum valor. O filtro precisa cobrir TODOS os
+       prefixos — ja me enganei procurando so por BRAVO e concluindo
+       que as do Meta nao existiam. */
     nomesEncontrados: Object.keys(process.env)
-      .filter(function(k){ return k.toUpperCase().indexOf("BRAVO") > -1; })
+      .filter(function(k){ return /^(BRAVOPAY|META|APPMAX)_/.test(k.toUpperCase()); })
       .sort()
   });
 };
