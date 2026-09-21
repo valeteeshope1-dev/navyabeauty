@@ -277,6 +277,49 @@ h2{font-size:clamp(27px,6.6vw,34px);line-height:1.1;letter-spacing:-.035em;margi
 .offer-section h2{margin-top:9px}
 .offer-section p{color:#d8cfdd;font-size:15px}
 .offer-panel{background:#fff;color:var(--ink);padding:20px;border-radius:22px}
+/* --- Prova social no painel da oferta ----------------------- */
+.pv-topo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.pv-nota{font-size:30px;font-weight:900;line-height:1}
+.pv-lado{line-height:1.25}
+.pv-estrelas{color:#f0a500;font-size:15px;letter-spacing:1px}
+.pv-lado small{display:block;font-size:12px;color:var(--muted);font-weight:700}
+
+/* Faixa de videos: rola na horizontal, um toque abre. */
+.pv-videos{
+  display:flex;gap:9px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch
+}
+.pv-videos::-webkit-scrollbar{display:none}
+.pv-item{
+  position:relative;flex:0 0 98px;width:98px;aspect-ratio:9/16;
+  border:0;padding:0;border-radius:12px;overflow:hidden;cursor:pointer;
+  background:#efe6ef;appearance:none;-webkit-appearance:none
+}
+.pv-item img,.pv-item video{width:100%;height:100%;object-fit:cover;display:block}
+.pv-play{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.45))
+}
+.pv-play span{
+  width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.92);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--purple);font-size:13px;padding-left:2px
+}
+.pv-item.tocando .pv-play{display:none}
+
+/* Depoimentos curtos */
+.pv-dep{border-top:1px solid var(--border);padding-top:13px;margin-bottom:6px}
+.pv-dep + .pv-dep{margin-top:11px}
+.pv-cab{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.pv-cab b{font-size:13px}
+.pv-cab .pv-estrelas{font-size:12.5px}
+.pv-cab small{font-size:11.5px;color:var(--muted);font-weight:700;margin-left:auto}
+.pv-dep p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink)}
+.pv-verificada{
+  font-size:10.5px;font-weight:900;color:var(--green);
+  display:inline-flex;align-items:center;gap:3px
+}
+
 .offer-name{font-size:12px;font-weight:900;color:#8b8093;letter-spacing:.02em}
 .stock{
   display:flex;gap:9px;align-items:center;background:var(--pink-soft);color:#a8258a;
@@ -655,17 +698,49 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
       </div>
 
       <div class="offer-panel">
-        <div class="offer-name">ESCOVA MÁGICA RETRÁTIL PREMIUM</div>
-        <div class="price-line" style="margin-top:8px">
-          <span class="price">R$ 37,90</span>
-          <span class="old">R$ 58,90</span>
-          <span class="discount">36% OFF</span>
+        <div class="pv-topo">
+          <b class="pv-nota">5,0</b>
+          <div class="pv-lado">
+            <div class="pv-estrelas">★★★★★</div>
+            <small>15 avaliações de quem comprou</small>
+          </div>
         </div>
-        <div class="pix">Economia de R$ 21,00 · Preço promocional por tempo limitado</div>
 
-        <div class="stock">🔥 Alta procura — disponibilidade pode ser limitada</div>
+        <!-- Videos das clientes. preload="none": nada e baixado ate
+             alguem tocar, senao a pagina inicial carregaria megabytes
+             de video que a maioria nao vai assistir. -->
+        <div class="pv-videos" id="pvVideos"></div>
 
-        <p class="offer-note">Escolha a cor e a quantidade na próxima etapa.</p>
+        <div class="pv-dep">
+          <div class="pv-cab">
+            <b>m*****a</b>
+            <span class="pv-estrelas">★★★★★</span>
+            <small>09/05/2026</small>
+          </div>
+          <p>“A escova é ótima! Não acumula sujeira dos cabelos. Prática para colocar na bolsa! Amei!! Estou super feliz com minha compra!!”</p>
+        </div>
+
+        <div class="pv-dep">
+          <div class="pv-cab">
+            <b>j*****a</b>
+            <span class="pv-estrelas">★★★★★</span>
+            <small>29/04/2026</small>
+          </div>
+          <p>“Comprei outro de tanto que gostei, pra uso da minha filha. Serve muito pra desembaraço, e temos cabelos com diferentes curvaturas aqui em casa, e serviu pra todos.”</p>
+        </div>
+
+        <div class="pv-dep">
+          <div class="pv-cab">
+            <b>v*****7</b>
+            <span class="pv-estrelas">★★★★★</span>
+            <small>29/03/2025</small>
+          </div>
+          <p>“Já comprei a terceira vez com essa. Muito boa e firme.”</p>
+        </div>
+
+        <p class="offer-note" style="margin-top:14px">
+          <span class="pv-verificada">✓ Avaliações de compras verificadas</span>
+        </p>
 
         <button type="button" class="cta" id="buyButton" onclick="buyNow()">QUERO MINHA ESCOVA MÁGICA →</button>
 
@@ -741,6 +816,88 @@ var PRODUCT_URL = "/produto";
 function buyNow(){
   window.location.href = PRODUCT_URL;
 }
+
+/* ============================================================
+   PROVA SOCIAL — videos das clientes
+
+   Os videos somam alguns megabytes. Carregar todos de entrada
+   faria a pagina inicial demorar no 4G, justamente para quem vem
+   do anuncio — o visitante mais caro que existe.
+
+   Entao cada quadradinho comeca como FOTO. So quando a pessoa
+   toca e que o video e criado e baixado. Quem nao tocar nao paga
+   nada por eles.
+   ============================================================ */
+
+/* Escolhidos entre os mais leves da pasta. A capa e uma foto da
+   propria avaliacao, nao um quadro do video: sai mais nitida. */
+var PROVA = [
+  { video:"av12.mp4", capa:"av12-f2.jpg", quem:"4*****c" },
+  { video:"av14.mp4", capa:"av14-f2.jpg", quem:"e*****s" },
+  { video:"av11.mp4", capa:"av11-f1.jpg", quem:"v*****7" },
+  { video:"av1.mp4",  capa:"av1-f2.jpg",  quem:"l*****a" },
+  { video:"av8.mp4",  capa:"av8-f2.jpg",  quem:"a*****6" },
+  { video:"av7.mp4",  capa:"av7-f1.jpg",  quem:"j*****0" }
+];
+
+function montarProva(){
+  var caixa = document.getElementById("pvVideos");
+  if (!caixa) return;
+
+  PROVA.forEach(function(item, i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "pv-item";
+    b.setAttribute("aria-label", "Ver o vídeo da cliente " + item.quem);
+
+    var img = document.createElement("img");
+    img.src = "./img/avaliacoes/" + item.capa;
+    img.alt = "Avaliação de " + item.quem;
+    img.loading = i < 3 ? "eager" : "lazy";
+    b.appendChild(img);
+
+    var play = document.createElement("span");
+    play.className = "pv-play";
+    play.innerHTML = "<span>▶</span>";
+    b.appendChild(play);
+
+    b.addEventListener("click", function(){ tocarProva(b, item); });
+    caixa.appendChild(b);
+  });
+}
+
+function tocarProva(botao, item){
+  /* Ja esta tocando: o segundo toque pausa. */
+  var jaTem = botao.querySelector("video");
+  if (jaTem){
+    if (jaTem.paused) jaTem.play(); else jaTem.pause();
+    return;
+  }
+
+  /* Um video por vez: dois audios ao mesmo tempo e desagradavel. */
+  document.querySelectorAll(".pv-item video").forEach(function(v){ v.pause(); });
+
+  var v = document.createElement("video");
+  v.src = "./video/" + item.video;
+  v.playsInline = true;          /* sem isto o iPhone abre em tela cheia */
+  v.controls = true;
+  v.preload = "auto";
+  v.setAttribute("poster", "./img/avaliacoes/" + item.capa);
+
+  botao.classList.add("tocando");
+  botao.innerHTML = "";
+  botao.appendChild(v);
+
+  /* Com som: e depoimento de gente falando, mudo nao serve de nada.
+     Se o navegador recusar (politica de autoplay), tenta mudo — e
+     ai o proprio controle deixa a pessoa ligar o som. */
+  v.play().catch(function(){
+    v.muted = true;
+    v.play().catch(function(){});
+  });
+}
+
+document.addEventListener("DOMContentLoaded", montarProva);
 </script>
 
 </body>
