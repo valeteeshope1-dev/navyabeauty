@@ -277,6 +277,22 @@ h2{font-size:clamp(27px,6.6vw,34px);line-height:1.1;letter-spacing:-.035em;margi
 .offer-section h2{margin-top:9px}
 .offer-section p{color:#d8cfdd;font-size:15px}
 .offer-panel{background:#fff;color:var(--ink);padding:20px;border-radius:22px}
+/* --- Prova social: secao propria, logo depois do destaque ---- */
+.prova-section{padding:0 0 52px}
+.prova-head{margin-bottom:20px}
+/* Mesmo gradiente do titulo do hero. */
+.prova-head h2{color:var(--ink)}
+.prova-head h2 em{
+  font-style:normal;
+  background:linear-gradient(120deg,var(--purple),var(--pink));
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.prova-cta{max-width:420px;margin:16px auto 0}
+.prova-card{
+  background:var(--paper);border:1px solid var(--border);border-radius:22px;
+  padding:20px;box-shadow:var(--shadow);max-width:760px;margin:0 auto
+}
+
 /* --- Prova social no painel da oferta ----------------------- */
 .pv-topo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .pv-nota{font-size:30px;font-weight:900;line-height:1}
@@ -355,6 +371,9 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
   gap:14px;text-align:center
 }
 .footer-inner img{height:42px;width:auto}
+.footer-txt{display:flex;flex-direction:column;gap:7px}
+.footer-txt a{color:#e2d3e6;text-decoration:none;font-weight:700}
+.footer-txt a:hover{text-decoration:underline}
 
 /* --- Barra fixa de compra (mobile) ---------------------------- */
 .sticky-mobile{
@@ -433,6 +452,8 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
   .offer-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:50px;align-items:center}
   .offer-section:before{width:460px;height:460px;right:-120px;top:-150px}
   .offer-panel{padding:28px}
+  .prova-section{padding-bottom:84px}
+  .prova-card{padding:30px}
 }
 </style>
 </head>
@@ -549,6 +570,67 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
           <span class="pill">✓ Menos frizz</span>
           <span class="pill">✓ Escova sempre limpa</span>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PROVA SOCIAL (vídeos de quem comprou) ===== -->
+  <section class="prova-section" id="avaliacoes">
+    <div class="wrap">
+      <div class="section-head prova-head">
+        <div class="kicker">Quem já usa</div>
+        <h2><em>Feedbacks</em> de clientes</h2>
+      </div>
+
+      <div class="prova-card">
+        <div class="pv-topo">
+          <b class="pv-nota">5,0</b>
+          <div class="pv-lado">
+            <div class="pv-estrelas">★★★★★</div>
+            <small>15 avaliações de quem comprou</small>
+          </div>
+        </div>
+
+        <!-- Videos das clientes. O arquivo so e baixado quando alguem
+             toca no card, senao a home carregaria megabytes de video
+             que a maioria nao vai assistir. -->
+        <div class="pv-videos" id="pvVideos"></div>
+
+        <div class="pv-dep">
+          <div class="pv-cab">
+            <b>m*****a</b>
+            <span class="pv-estrelas">★★★★★</span>
+            <small>09/05/2026</small>
+          </div>
+          <p>“A escova é ótima! Não acumula sujeira dos cabelos. Prática para colocar na bolsa! Amei!! Estou super feliz com minha compra!!”</p>
+        </div>
+
+        <div class="pv-dep">
+          <div class="pv-cab">
+            <b>j*****a</b>
+            <span class="pv-estrelas">★★★★★</span>
+            <small>29/04/2026</small>
+          </div>
+          <p>“Comprei outro de tanto que gostei, pra uso da minha filha. Serve muito pra desembaraço, e temos cabelos com diferentes curvaturas aqui em casa, e serviu pra todos.”</p>
+        </div>
+
+        <div class="pv-dep">
+          <div class="pv-cab">
+            <b>v*****7</b>
+            <span class="pv-estrelas">★★★★★</span>
+            <small>29/03/2025</small>
+          </div>
+          <p>“Já comprei a terceira vez com essa. Muito boa e firme.”</p>
+        </div>
+
+        <p class="offer-note" style="margin-top:14px">
+          <span class="pv-verificada">✓ Avaliações de compras verificadas</span>
+        </p>
+
+        <div class="prova-cta">
+          <button type="button" class="cta" onclick="buyNow()">QUERO MINHA ESCOVA MÁGICA →</button>
+        </div>
+
       </div>
     </div>
   </section>
@@ -698,57 +780,7 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
       </div>
 
       <div class="offer-panel">
-        <div class="pv-topo">
-          <b class="pv-nota">5,0</b>
-          <div class="pv-lado">
-            <div class="pv-estrelas">★★★★★</div>
-            <small>15 avaliações de quem comprou</small>
-          </div>
-        </div>
-
-        <!-- Videos das clientes. preload="none": nada e baixado ate
-             alguem tocar, senao a pagina inicial carregaria megabytes
-             de video que a maioria nao vai assistir. -->
-        <div class="pv-videos" id="pvVideos"></div>
-
-        <div class="pv-dep">
-          <div class="pv-cab">
-            <b>m*****a</b>
-            <span class="pv-estrelas">★★★★★</span>
-            <small>09/05/2026</small>
-          </div>
-          <p>“A escova é ótima! Não acumula sujeira dos cabelos. Prática para colocar na bolsa! Amei!! Estou super feliz com minha compra!!”</p>
-        </div>
-
-        <div class="pv-dep">
-          <div class="pv-cab">
-            <b>j*****a</b>
-            <span class="pv-estrelas">★★★★★</span>
-            <small>29/04/2026</small>
-          </div>
-          <p>“Comprei outro de tanto que gostei, pra uso da minha filha. Serve muito pra desembaraço, e temos cabelos com diferentes curvaturas aqui em casa, e serviu pra todos.”</p>
-        </div>
-
-        <div class="pv-dep">
-          <div class="pv-cab">
-            <b>v*****7</b>
-            <span class="pv-estrelas">★★★★★</span>
-            <small>29/03/2025</small>
-          </div>
-          <p>“Já comprei a terceira vez com essa. Muito boa e firme.”</p>
-        </div>
-
-        <p class="offer-note" style="margin-top:14px">
-          <span class="pv-verificada">✓ Avaliações de compras verificadas</span>
-        </p>
-
         <button type="button" class="cta" id="buyButton" onclick="buyNow()">QUERO MINHA ESCOVA MÁGICA →</button>
-
-        <div class="micro">
-          <span>🔒 Compra segura</span>
-          <span>🚚 Frete grátis</span>
-          <span>📦 Pedido monitorado</span>
-        </div>
       </div>
     </div>
   </section>
@@ -791,7 +823,10 @@ footer{background:#140d17;color:#a99fae;padding:30px 0;font-size:12.5px}
 <footer>
   <div class="wrap footer-inner">
     <img src="./img/logo-navya.png" alt="Navya Beauty Cosmetics" loading="lazy">
-    <span>© Navya Beauty Cosmetics · Todos os direitos reservados</span>
+    <div class="footer-txt">
+      <span>© Navya Beauty Cosmetics · Todos os direitos reservados</span>
+      <a href="mailto:navyabeautysuport@gmail.com">Suporte: navyabeautysuport@gmail.com</a>
+    </div>
   </div>
 </footer>
 
