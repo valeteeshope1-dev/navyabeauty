@@ -17,6 +17,15 @@ var CORES = ["Branco", "Verde", "Rosa"];
 var PRODUTO_NOME = "Escova Mágica Retrátil Premium";
 var SKU_BASE = "NAVYA-ESCOVA";
 
+/* Order bump oferecido dentro da sacola. Espelho de BUMP em
+   js/loja.js — os dois precos tem que andar juntos. */
+var BUMP = {
+  sku:  "NAVYA-TOUCA-CETIM-3",
+  nome: "Kit 3 Toucas de Cetim Antifrizz",
+  de:   49.90,
+  por:  26.90
+};
+
 var FRETE_CENTAVOS = 0;   /* frete gratis hoje; se mudar, mexa aqui */
 
 function precoTotal(q){
@@ -31,7 +40,7 @@ function centavos(reais){
 
 /* Recebe o carrinho cru do navegador e devolve o pedido conferido.
    Lanca Error com mensagem para o cliente se algo nao fechar. */
-function conferirPedido(itens){
+function conferirPedido(itens, comBump){
   if (!Array.isArray(itens) || itens.length === 0){
     throw new Error("Sua sacola está vazia.");
   }
@@ -84,6 +93,20 @@ function conferirPedido(itens){
     };
   });
 
+  /* O bump entra como linha propria, com preco fixo: o navegador
+     manda so "quero" ou "nao quero", nunca o valor. */
+  var levaBump = comBump === true || comBump === "true" || comBump === 1;
+  if (levaBump){
+    produtos.push({
+      sku: BUMP.sku,
+      name: BUMP.nome,
+      quantity: 1,
+      unit_value: centavos(BUMP.por),
+      type: "physical",
+      _valor_linha: centavos(BUMP.por)
+    });
+  }
+
   /* products_value manda no total: e a soma exata das linhas,
      imune a qualquer sobra de centavo no unit_value acima. */
   var produtosValor = produtos.reduce(function(s, p){ return s + p._valor_linha; }, 0);
@@ -97,7 +120,8 @@ function conferirPedido(itens){
     desconto: 0,
     total: produtosValor + FRETE_CENTAVOS,
     total_reais: (produtosValor + FRETE_CENTAVOS) / 100,
-    cheio: centavos(PRECO_CHEIO * unidades)
+    bump: levaBump,
+    cheio: centavos(PRECO_CHEIO * unidades) + (levaBump ? centavos(BUMP.de) : 0)
   };
 }
 
@@ -154,5 +178,6 @@ module.exports = {
   conferirPedido: conferirPedido,
   aplicarJuros: aplicarJuros,
   PRODUTO_NOME: PRODUTO_NOME,
+  BUMP: BUMP,
   PARCELAS_MAX: PARCELAS_MAX
 };

@@ -105,7 +105,7 @@ module.exports = async function handler(req, res){
   /* --- 1. Conferencia: nada passa daqui sem estar valido ----- */
   try {
     dados  = validar.conferirDados(corpo);
-    pedido = precos.conferirPedido(corpo.itens);
+    pedido = precos.conferirPedido(corpo.itens, corpo.bump);
   } catch (e) {
     return res.status(400).json({ ok: false, erro: e.message });
   }

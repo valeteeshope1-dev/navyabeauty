@@ -122,6 +122,59 @@ h1,h2,h3{margin:0}
   background:#fff;border:1px solid var(--border);border-radius:var(--radius);
   padding:18px;margin-top:14px
 }
+/* Order bump do checkout: mesma oferta da sacola, para quem
+   passou direto por ela. */
+.bump-bloco{border-color:var(--pink);border-width:2px;border-style:dashed;background:var(--pink-soft)}
+.bump-bloco.levou{border-style:solid;border-color:var(--purple);background:var(--lilac)}
+.bump-tag{
+  display:block;font-size:10.5px;font-weight:900;letter-spacing:.08em;
+  color:var(--pink);text-transform:uppercase;margin-bottom:9px
+}
+.bump-bloco.levou .bump-tag{color:var(--purple)}
+.bump-linha{display:flex;align-items:center;gap:12px;width:100%;text-align:left}
+.bump-img{
+  flex:0 0 58px;width:58px;height:58px;border-radius:11px;overflow:hidden;
+  background:#e9dcea;display:block
+}
+.bump-img img{width:100%;height:100%;object-fit:cover;display:block}
+.bump-txt{flex:1;min-width:0;line-height:1.3}
+.bump-txt>b{display:block;font-size:13.5px;font-weight:900}
+.bump-txt small{display:block;font-size:11.5px;color:var(--muted);font-weight:700;margin:2px 0 5px}
+.bump-preco{font-size:14px;font-weight:900}
+.bump-preco s{color:var(--muted);font-weight:700;margin-right:6px}
+.bump-preco b{color:var(--purple)}
+.bump-kit{
+  display:inline-block;background:var(--purple);color:#fff;
+  font-size:10.5px;font-weight:900;padding:2px 7px;border-radius:999px;
+  vertical-align:1px;white-space:nowrap
+}
+.bump-add{
+  width:100%;margin-top:12px;min-height:46px;padding:12px;
+  border:0;border-radius:12px;cursor:pointer;font:inherit;
+  background:linear-gradient(120deg,var(--purple),var(--pink));
+  color:#fff;font-weight:900;font-size:13.5px;
+  appearance:none;-webkit-appearance:none
+}
+.bump-add:active{transform:scale(.99)}
+.bump-feito{
+  display:flex;align-items:center;gap:8px;margin-top:11px;
+  font-size:12.5px;font-weight:900;color:var(--green)
+}
+.bump-tirar{
+  margin-left:auto;border:0;background:none;cursor:pointer;font:inherit;
+  font-size:12px;font-weight:800;color:var(--muted);text-decoration:underline;
+  appearance:none;-webkit-appearance:none
+}
+
+/* Recado antes do titulo: quem le depois de errar o CEP ja perdeu
+   a entrega, entao ele vem antes de o dedo tocar no primeiro campo. */
+.nota-bloco{
+  display:flex;gap:9px;align-items:flex-start;
+  background:var(--lilac);border-radius:12px;padding:11px 13px;margin-bottom:14px;
+  font-size:12.5px;line-height:1.45;font-weight:700;color:#6c4a7d
+}
+.nota-bloco span:first-child{flex:0 0 auto;font-size:14px;line-height:1.3}
+
 .bloco h2{
   font-size:16px;letter-spacing:-.02em;margin-bottom:14px;
   display:flex;align-items:center;gap:9px
@@ -150,6 +203,8 @@ h1,h2,h3{margin:0}
 .campo .aviso{font-size:11.5px;color:var(--erro);font-weight:800;margin-top:4px;display:none}
 .campo.ruim .aviso{display:block}
 .campo .dica{font-size:11.5px;color:var(--muted);font-weight:700;margin-top:4px}
+/* Sublinhado um pouco afastado do texto: colado na letra fica sujo. */
+.campo .dica u{text-decoration:underline;text-underline-offset:2px;color:var(--ink)}
 
 .dupla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .tripla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -275,6 +330,22 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
 }
 
 /* --- Pagamento: Pix e erros --------------------------------- */
+/* Confirmacao do frete: verde discreto, sem parecer alerta. */
+.frete-ok{
+  display:flex;align-items:center;gap:10px;margin-top:15px;
+  background:#e9f6ef;border:1px solid #c2e6d3;border-radius:12px;
+  padding:11px 13px;color:#14663f;
+  animation:freteEntra .25s ease
+}
+.frete-ok-icone{
+  flex:0 0 22px;width:22px;height:22px;border-radius:50%;
+  background:var(--green);color:#fff;font-size:12px;font-weight:900;
+  display:flex;align-items:center;justify-content:center
+}
+.frete-ok b{display:block;font-size:13px;font-weight:900}
+.frete-ok small{display:block;font-size:11.5px;font-weight:700;opacity:.85;margin-top:1px}
+@keyframes freteEntra{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+
 .erro-caixa{
   display:none;margin-top:14px;padding:12px 14px;border-radius:12px;
   background:#fdecec;border:1px solid #f3c4c4;color:#8e1f1f;
@@ -426,11 +497,16 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
           <label for="tel">Celular</label>
           <input id="tel" name="tel" type="tel" autocomplete="tel" inputmode="numeric" maxlength="15" placeholder="(11) 90000-0000">
           <span class="aviso">Informe um celular com DDD.</span>
+          <span class="dica">Falamos com você pelo <u>WhatsApp</u> sobre seu pedido e suas dúvidas.</span>
         </div>
       </div>
     </div>
 
     <div class="bloco">
+      <div class="nota-bloco">
+        <span aria-hidden="true">📦</span>
+        <span>Confira os dados com atenção: é para este endereço que o pedido será enviado. Um dado errado pode atrasar ou até devolver a entrega.</span>
+      </div>
       <h2><i>2</i>Endereço de entrega</h2>
       <div class="campos">
         <div class="campo" id="c-cep">
@@ -471,7 +547,21 @@ footer{background:#140d17;color:#a99fae;padding:26px 0;font-size:12.5px;margin-t
           <span class="aviso">Selecione o estado.</span>
         </div>
       </div>
+
+      <!-- So aparece com o endereco inteiro preenchido: e o premio
+           por ter terminado a parte chata do formulario. -->
+      <div class="frete-ok" id="freteOk" hidden>
+        <span class="frete-ok-icone" aria-hidden="true">✓</span>
+        <span>
+          <b>Frete grátis garantido!</b>
+          <small>Entrega estimada de 3 a 7 dias úteis.</small>
+        </span>
+      </div>
     </div>
+
+    <!-- Ultima chance do order bump: so aparece para quem NAO
+         marcou a touca na sacola. Quem ja levou nao ve nada. -->
+    <div class="bloco bump-bloco" id="bumpBloco" hidden></div>
 
     <div class="bloco">
       <h2><i>3</i>Forma de pagamento</h2>
@@ -643,6 +733,7 @@ function buscarCEP(){
         document.getElementById(c).classList.remove("ruim");
       });
       dica.textContent = "Endereço preenchido. Confira o número.";
+      conferirFrete();
       document.getElementById("numero").focus();
     })
     .catch(function(){
@@ -669,6 +760,18 @@ function montarResumo(r){
         '<span class="ci-val">' + brl(l.valor) + '</span>' +
       '</div>';
   });
+
+  if (r.bump){
+    html +=
+      '<div class="ci">' +
+        '<span class="ci-bola" style="background:var(--pink)"></span>' +
+        '<span class="ci-info">' +
+          '<b>' + r.bump.nome + '</b>' +
+          '<small>' + BUMP.kit + '</small>' +
+        '</span>' +
+        '<span class="ci-val">' + brl(r.bump.valor) + '</span>' +
+      '</div>';
+  }
 
   html +=
     '<div class="linha"><span>Subtotal (' + r.unidades + (r.unidades > 1 ? " itens" : " item") + ')</span><span>' + brl(r.cheio) + '</span></div>' +
@@ -722,6 +825,84 @@ function carregarDados(){
       if (typeof d[c] === "string") document.getElementById(c).value = d[c];
     });
   } catch(e){}
+}
+
+/* --- Order bump no checkout --------------------------------- */
+/* Regra da tela: quem chegou aqui ja com a touca na sacola nao ve
+   o bloco. Quem aceita agora ve a confirmacao no lugar da oferta,
+   senao o card sumiria sem dizer que deu certo. */
+var bumpJaTinha = false;
+
+function montarBumpCheckout(){
+  var bloco = document.getElementById("bumpBloco");
+  if (!bloco) return;
+
+  if (bumpJaTinha){ bloco.hidden = true; return; }
+
+  bloco.hidden = false;
+  bloco.classList.toggle("levou", bumpNaSacola);
+
+  var ficha =
+    '<div class="bump-linha">' +
+      '<span class="bump-img"><img src="' + BUMP.foto + '" alt="" loading="lazy" ' +
+            'onerror="this.remove()"></span>' +
+      '<span class="bump-txt">' +
+        '<b>' + BUMP.nome + ' <span class="bump-kit">' + BUMP.kit + '</span></b>' +
+        '<small>' + BUMP.desc + '</small>' +
+        '<span class="bump-preco"><s>' + brl(BUMP.de) + '</s><b>' + brl(BUMP.por) + '</b></span>' +
+      '</span>' +
+    '</div>';
+
+  if (bumpNaSacola){
+    bloco.innerHTML =
+      '<span class="bump-tag">Adicionado ao seu pedido</span>' + ficha +
+      '<div class="bump-feito">✓ Touca incluída no pedido' +
+        '<button type="button" class="bump-tirar" onclick="tirarBumpCheckout()">remover</button>' +
+      '</div>';
+  } else {
+    bloco.innerHTML =
+      '<span class="bump-tag">Leve também, antes de pagar</span>' + ficha +
+      '<button type="button" class="bump-add" onclick="pegarBumpCheckout()">' +
+        'ADICIONAR POR ' + brl(BUMP.por) + ' →' +
+      '</button>';
+  }
+}
+
+function pegarBumpCheckout(){
+  if (bumpNaSacola) return;
+  alternarBump();
+  renderResumo();
+  montarBumpCheckout();
+  if (typeof pixelAdicionarCarrinho === "function"){
+    pixelAdicionarCarrinho(BUMP.nome, BUMP.por, 1);
+  }
+}
+
+function tirarBumpCheckout(){
+  if (!bumpNaSacola) return;
+  alternarBump();
+  renderResumo();
+  montarBumpCheckout();
+}
+
+/* Endereco completo: mesma regra que o validarTudo usa na hora de
+   finalizar, para a faixa nunca prometer o que o envio vai negar. */
+function enderecoCompleto(){
+  return soNumeros(document.getElementById("cep").value).length === 8 &&
+         document.getElementById("numero").value.trim() !== "" &&
+         document.getElementById("rua").value.trim()    !== "" &&
+         document.getElementById("bairro").value.trim() !== "" &&
+         document.getElementById("cidade").value.trim() !== "" &&
+         document.getElementById("uf").value            !== "";
+}
+
+function conferirFrete(){
+  var faixa = document.getElementById("freteOk");
+  if (!faixa) return;
+  var completo = enderecoCompleto();
+  /* So mexe quando muda de estado: senao a animacao reinicia a
+     cada tecla digitada depois do endereco pronto. */
+  if (completo === faixa.hidden) faixa.hidden = !completo;
 }
 
 /* --- Finalizar ---------------------------------------------- */
@@ -795,6 +976,9 @@ function enviarPedido(){
 
   var corpo = {
     itens: carrinho.map(function(i){ return { cor:i.cor, qtd:i.qtd }; }),
+
+    /* So o "quero" viaja: o preco do bump quem sabe e o servidor. */
+    bump: bumpNaSacola,
     cliente: {
       nome:  document.getElementById("nome").value,
       email: document.getElementById("email").value,
@@ -1045,8 +1229,17 @@ document.addEventListener("DOMContentLoaded", function(){
 
   document.getElementById("telaCheckout").hidden = false;
   document.getElementById("barra").hidden = false;
+  /* Fotografado antes de qualquer clique: e o que decide se o
+     bloco existe nesta visita. */
+  bumpJaTinha = bumpNaSacola;
+
   renderResumo();
   carregarDados();
+  montarBumpCheckout();
+
+  /* Quem volta ao checkout ja tem os dados salvos: a faixa precisa
+     nascer visivel, nao esperar a pessoa digitar de novo. */
+  conferirFrete();
 
   /* mascaras ao digitar */
   var cpf = document.getElementById("cpf");
@@ -1067,7 +1260,9 @@ document.addEventListener("DOMContentLoaded", function(){
     el.addEventListener("input", function(){
       var c = el.closest(".campo");
       if (c) c.classList.remove("ruim");
+      conferirFrete();
     });
+    el.addEventListener("change", conferirFrete);
     el.addEventListener("blur", salvarDados);
   });
 
